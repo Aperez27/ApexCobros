@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>APEX · Manual técnico</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<main>
+<section class="portada">
+    <div class="contenido">
+        <div class="marca">A</div>
+        <div class="producto">APEX</div>
+        <h1>Manual técnico</h1>
+        <div class="subtitulo">Arquitectura, estructura del código, base de datos, reglas de negocio y cálculo, seguridad técnica, pruebas y guía para extender el sistema.</div>
+        <div class="publico">Dirigido a: desarrolladores y personal de soporte técnico</div>
+    </div>
+    <div class="datos">
+        <div><strong>APEX · Sistema de control de cobros</strong>Versión 1.3 · <span data-fecha></span></div>
+        <div style="text-align:right"><strong>Desarrollado por</strong>Ing. Antony Pérez</div>
+    </div>
+</section>
+
+<nav class="indice"><h2 data-sin-indice>Contenido</h2><div id="indice"></div></nav>
+
+<h1>Visión general</h1>
+<h2>Tecnologías</h2>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:28%"><b>Backend</b></td><td>PHP 8.1+ con <code>declare(strict_types=1)</code>. Arquitectura MVC propia, sin framework ni Composer.</td></tr>
+        <tr><td><b>Base de datos</b></td><td>MySQL / MariaDB con InnoDB, utf8mb4 y llaves foráneas. Acceso con PDO y consultas preparadas.</td></tr>
+        <tr><td><b>Frontend</b></td><td>HTML renderizado en el servidor, Bootstrap 5.3, Bootstrap Icons y Chart.js 4 (CDN jsDelivr), y JavaScript propio sin dependencias (<code>assets/js/app.js</code>, <code>assets/js/offline.js</code>).</td></tr>
+        <tr><td><b>Sin conexión</b></td><td>Service worker (<code>sw.js</code>) con Cache Storage para consultar páginas guardadas; IndexedDB para la cola de cobros hechos sin señal; manifiesto web (<code>manifest.webmanifest</code>) para instalarlo como aplicación.</td></tr>
+        <tr><td><b>Excel</b></td><td>Generador .xlsx propio (<code>app/services/Xlsx.php</code>) que arma el contenedor ZIP con <code>gzdeflate</code>; no requiere la extensión zip.</td></tr>
+        <tr><td><b>Servidor</b></td><td>Apache 2.4 con <code>mod_rewrite</code> y <code>mod_headers</code>.</td></tr>
+    </tbody>
+</table>
+<h2>Principios de diseño</h2>
+<ul>
+    <li><b>Un solo punto de entrada</b> (<code>index.php</code>); todo lo demás está bloqueado por <code>.htaccess</code>.</li>
+    <li><b>El servidor es la fuente de verdad:</b> toda validación y permiso se aplica en PHP; el JavaScript solo mejora la experiencia.</li>
+    <li><b>Integridad contable:</b> los pagos nunca se borran (se anulan) y los saldos se recalculan a partir de los pagos vigentes, de forma que el plan siempre cuadra con la caja.</li>
+    <li><b>Trazabilidad:</b> toda acción relevante queda en la auditoría.</li>
+    <li><b>Sin conexión, sin atajos:</b> lo registrado sin señal pasa por las mismas validaciones del servidor al sincronizar; el celular nunca es fuente de verdad.</li>
+</ul>
+
+<h1>Arquitectura</h1>
+<h2>Ciclo de una petición</h2>
+<div class="diagrama"><div class="flujo">
+    <div class="caja"><b>1. Navegador</b>GET/POST /clientes/ver/5</div><span class="flecha">→</span>
+    <div class="caja"><b>2. .htaccess</b>Reescribe a index.php?url=…</div><span class="flecha">→</span>
+    <div class="caja"><b>3. bootstrap.php</b>Autoload, .env, cabeceras, sesión</div><span class="flecha">→</span>
+    <div class="caja"><b>4. App (router)</b>ClientesController::ver('5')</div><span class="flecha">→</span>
+    <div class="caja"><b>5. Controlador</b>Permisos, validación</div><span class="flecha">→</span>
+    <div class="caja"><b>6. Modelo</b>SQL con PDO</div><span class="flecha">→</span>
+    <div class="caja"><b>7. Vista + layout</b>HTML escapado</div>
+</div></div>
+<h2>Enrutamiento</h2>
+<p>La URL <code>/controlador/accion/param1/param2</code> se traduce a <code>{Controlador}Controller::{accion}(param1, param2)</code>. Los guiones se convierten a camelCase (<code>caja/anular-gasto/7</code> → <code>CajaController::anularGasto('7')</code>). La ruta vacía va a <code>dashboard/index</code>.</p>
+<p>El router (<code>app/core/App.php</code>) solo ejecuta métodos <b>públicos, no estáticos, declarados en el propio controlador</b> y que no empiecen por <code>__</code>; valida el nombre con <code>^[a-z0-9-]+$</code> y exige el número mínimo de parámetros. Cualquier otro caso responde 404. Las excepciones de base de datos y las inesperadas se registran en el log y muestran una página de error genérica (o el detalle si <code>APP_DEBUG=true</code>).</p>
+<h2>Estructura del código</h2>
+<pre><code>app/
+├── bootstrap.php          Autoload PSR-4 (App\ → app/), .env, zona horaria, errores, cabeceras y sesión
+├── config/config.php      Configuración leída de .env
+├── core/
+│   ├── App.php            Router
+│   ├── Controller.php     Base: view(), redirect(), back(), json(), requireLogin(), requireRole(),
+│   │                      requirePost() (CSRF), input(), withOld()
+│   ├── Model.php          Base: find(), all(), create(), update(), delete(), fetchAll/One/Value()
+│   ├── Database.php       Conexión PDO única (errores como excepción, sin emulación de preparadas)
+│   ├── Auth.php           Sesión del usuario y su revalidación por petición
+│   ├── Security.php       Cabeceras HTTP, nonce CSP, sesión endurecida, IP, URL interna
+│   ├── Password.php       Política de contraseñas y hash Argon2id
+│   ├── Config.php, Env.php
+├── controllers/           Un controlador por módulo
+├── models/                Acceso a datos y reglas de negocio
+├── services/              Xlsx, ReporteExcel, Respaldo
+├── helpers/functions.php  e(), url(), money(), parse_money(), fecha(), csrf_field(), flash(), badge()…
+└── views/                 Vistas por módulo, layouts (main, auth, print, documento) y parciales</code></pre>
+
+<h2>Rutas</h2>
+<table class="tabla compacta">
+    <thead><tr><th style="width:26%">Controlador</th><th>Acciones (GET salvo que se indique POST)</th><th style="width:16%">Acceso</th></tr></thead>
+    <tbody>
+        <tr><td>Auth</td><td>login (GET/POST), logout (POST)</td><td>Público</td></tr>
+        <tr><td>Dashboard</td><td>index</td><td>Ambos</td></tr>
+        <tr><td>Ruta</td><td>index, hoja (hoja de ruta imprimible), ordenar (POST, JSON)</td><td>Ambos (ruta propia)</td></tr>
+        <tr><td>Sincronizar</td><td>estado (JSON: sesión y token CSRF), operacion (POST, JSON)</td><td>Ambos</td></tr>
+        <tr><td>Clientes</td><td>index, crear, guardar (POST), editar/{id}, actualizar/{id} (POST), ver/{id}, eliminar/{id} (POST, admin), asignar (POST, admin)</td><td>Ambos (cartera propia)</td></tr>
+        <tr><td>Creditos</td><td>index, ver/{id}, estado/{id}, pazysalvo/{id}, excel/{id}; crear, renovar/{id}, simular, guardar (POST), anular/{id} (POST): admin</td><td>Ambos / admin</td></tr>
+        <tr><td>Pagos</td><td>index, guardar (POST), recibo/{id}; anular/{id} (POST): admin</td><td>Ambos / admin</td></tr>
+        <tr><td>Gestiones</td><td>guardar (POST)</td><td>Ambos (cartera propia)</td></tr>
+        <tr><td>Caja</td><td>index, gasto (POST), anular-gasto/{id} (POST); cerrar (POST): admin</td><td>Ambos / admin</td></tr>
+        <tr><td>Cobradores</td><td>index (admin), ver/{id} (el cobrador solo el suyo), trasladar/{id} (POST, admin)</td><td>Ambos / admin</td></tr>
+        <tr><td>Reportes</td><td>index, exportar/{tipo}</td><td>Admin</td></tr>
+        <tr><td>Usuarios</td><td>index, crear, guardar, editar/{id}, actualizar/{id}, estado/{id}, eliminar/{id}</td><td>Admin</td></tr>
+        <tr><td>Configuracion · Auditoria · Respaldo</td><td>index, guardar (POST) · index · index, descargar (POST)</td><td>Admin</td></tr>
+        <tr><td>Perfil</td><td>index, clave (POST)</td><td>Ambos</td></tr>
+    </tbody>
+</table>
+
+<h1>Reglas de negocio y cálculos</h1>
+<h2>Plan de cuotas</h2>
+<p><code>Credito::calcularPlan()</code> (estático, también lo usa el simulador):</p>
+<div class="formula">total = round(monto × (1 + interés / 100))<br>cuota = ceil(total / n / 100) × 100;  si total − cuota × (n − 1) ≤ 0 → cuota = floor(total / n)<br>última cuota = total − cuota × (n − 1)</div>
+<ul>
+    <li><b>Fechas:</b> diaria +1 día (si <code>excluir_domingos</code> y cae domingo, +1); semanal +7; quincenal +15; mensual mismo día del mes siguiente con tope en el último día (<code>sumarMes()</code> conserva el día original: 31 ene → 28 feb → 31 mar).</li>
+    <li>La creación es transaccional: crédito + código <code>CR-%05d</code> + cuotas.</li>
+</ul>
+<h2>Aplicación de pagos: <code>Credito::recalcular()</code></h2>
+<p>Tras registrar o anular un pago, el sistema <b>reconstruye</b> el estado del crédito desde cero: pone en 0 lo abonado de todas las cuotas y redistribuye todos los pagos vigentes en orden cronológico, de la cuota más antigua a la más nueva. La fecha de pago de cada cuota es la del pago que la completó. Luego actualiza <code>total_pagado</code>, <code>saldo = total − Σpagos</code> y el estado (<code>pagado</code> si saldo ≤ 0). Esto garantiza que anular un pago antiguo produce exactamente el mismo resultado que si nunca se hubiera registrado.</p>
+<p><code>Pago::registrar()</code> bloquea el crédito con <code>SELECT … FOR UPDATE</code> dentro de la transacción y rechaza montos mayores al saldo, evitando que dos pagos simultáneos excedan la deuda.</p>
+<h2>Renovación: <code>Credito::renovar()</code></h2>
+<p>En una sola transacción: bloquea el crédito anterior, valida <code>monto &gt; saldo</code>, inserta el crédito nuevo con <code>renovado_de</code>, <code>saldo_renovado</code> y <code>neto_entregado = monto − saldo</code>, e inserta en el anterior un pago con <code>metodo = 'renovacion'</code> por el saldo, que lo deja pagado. Los pagos de renovación se excluyen de todo cálculo de recaudo, caja y rentabilidad, y no se pueden anular directamente: anular el crédito nuevo anula ese movimiento y el anterior recupera su saldo.</p>
+<h2>Mora</h2>
+<p>Una cuota está vencida si <code>estado &lt;&gt; 'pagada' AND fecha_vencimiento &lt; CURDATE()</code> en un crédito activo. Días de mora = días desde la cuota vencida más antigua.</p>
+<h2>Calificación del cliente: <code>Cliente::calificaciones()</code></h2>
+<p>Se evalúan todas las cuotas de créditos no anulados que estén pagadas o vencidas. A tiempo: pagada con <code>fecha_pago ≤ fecha_vencimiento + 1 día</code>.</p>
+<div class="formula">puntualidad = a_tiempo / (a_tiempo + tarde + vencidas) · mora = días de la cuota vencida más antigua (crédito activo)<small>N si hay menos de 3 cuotas evaluadas · A: ≥ 90 % y mora ≤ 2 · B: ≥ 75 % y mora ≤ 7 · C: ≥ 50 % y mora ≤ 30 · D: el resto</small></div>
+<h2>Promesas de pago</h2>
+<p>Una gestión con <code>resultado = 'promesa'</code> está <b>cumplida</b> si la suma de pagos vigentes (sin renovaciones) entre <code>created_at</code> de la gestión y el final del día <code>fecha_promesa</code> es mayor o igual a <code>monto_promesa</code> (o a 1 si no se indicó monto); <b>incumplida</b> si la fecha ya pasó; si no, <b>pendiente</b>. Se calcula en la consulta, sin almacenarse.</p>
+<h2>Caja</h2>
+<div class="formula">a_entregar(día) = Σ pagos en efectivo del cobrador en el día − Σ gastos vigentes del día<br>en_mano = Σ efectivo histórico − Σ gastos históricos − Σ entregado en cierres</div>
+<p>Un cierre guarda una foto de los valores (<code>UNIQUE(cobrador_id, fecha)</code>; cerrar de nuevo lo reemplaza). Si los movimientos del día cambian después, la pantalla lo marca como desactualizado. Si <code>a_entregar &lt; 0</code> y se entrega 0, se registra como reembolso (<code>entregado = a_entregar</code>, diferencia 0).</p>
+<h2>Rentabilidad: <code>Reporte::rentabilidad()</code></h2>
+<div class="formula">interés cobrado = Σ pago × (total − monto) / total · capital recuperado = recaudo − interés cobrado<br>utilidad = interés cobrado − gastos de ruta · margen = utilidad / recaudo</div>
+<h2>Cartera por cobrador</h2>
+<p>La cartera se calcula por el cobrador <b>actualmente asignado</b> al cliente (<code>clientes.cobrador_id</code>); el recaudo, por quien recibió cada pago (<code>pagos.cobrador_id</code>). Así, al trasladar un cliente su saldo pasa al nuevo cobrador, pero lo ya cobrado sigue a nombre de quien lo cobró.</p>
+
+<h2>Orden de la ruta: <code>Cliente::ordenarRuta()</code></h2>
+<p>Cada cliente tiene <code>orden_ruta</code> (posición en la ruta de su cobrador; NULL = al final, por <code>id</code>). <code>ordenarRuta($cobradorId, $ids)</code> bloquea con <code>FOR UPDATE</code> los clientes del cobrador en su orden actual, toma solo los ids recibidos que le pertenecen y los reubica en los <b>huecos que ocupaban</b>, de menor a mayor. Así, ordenar la vista filtrada (por ejemplo, solo los clientes con cobro hoy) no mueve a los demás. Luego renumera 1…n. Al reasignar un cliente a otro cobrador, su <code>orden_ruta</code> vuelve a NULL y entra al final. <code>Credito::ruta()</code> ordena por cobrador, <code>orden_ruta IS NULL</code>, <code>orden_ruta</code>, cliente y crédito.</p>
+
+<h2>Trabajo sin conexión</h2>
+<h3>Consultar: <code>sw.js</code></h3>
+<ul>
+    <li><b>Estáticos</b> (<code>assets/</code> y CDN): primero caché, luego red. Las URL llevan <code>?v=filemtime</code> (<code>asset()</code>), así que una actualización genera URL nuevas.</li>
+    <li><b>Páginas HTML</b> (navegación GET): primero red, guardando copia en la caché <code>apex-paginas</code> (máximo 300). Sin red, o si la red tarda más de 8 s y hay copia, se sirve la copia con una franja "Sin conexión · copia guardada el …" y la meta <code>apex-copia=1</code>. Sin copia exacta se busca la misma ruta sin parámetros; si no hay, <code>assets/offline.html</code> lista las páginas guardadas.</li>
+    <li><b>Nunca se guardan:</b> <code>auth/*</code>, <code>sincronizar/*</code>, <code>respaldo/*</code>, descargas (<code>excel</code>, <code>exportar</code>, <code>descargar</code>), <code>simular</code>, <code>ordenar</code> y <code>ayuda/ver</code>. Las respuestas con <code>X-Apex-Copia: no</code> (avisos flash o "Ver recibo" de un solo uso) se vuelven a pedir limpias antes de guardarlas.</li>
+    <li><code>offline.js</code> pide al service worker precargar (mensaje <code>precache</code>) las pantallas principales cada 30 minutos y, desde la ruta, la ficha de cada cliente y crédito del día. Al cerrar sesión envía <code>limpiar</code>, que borra <code>apex-paginas</code>.</li>
+</ul>
+<h3>Registrar: <code>assets/js/offline.js</code></h3>
+<ul>
+    <li>Solo en la Ruta de cobro. Intercepta los formularios de pago y gestión: cada operación lleva un <code>op_uuid</code> generado con <code>crypto.getRandomValues</code>. Si no hay red o el envío no responde en 12 s, la operación (tipo, datos, hora local <code>creado_en</code>, usuario) se guarda en IndexedDB (<code>apex-offline</code> → <code>cola</code>, con secuencia creciente).</li>
+    <li>El orden de la ruta sin señal se guarda como operación <code>orden</code> (la última reemplaza a la anterior).</li>
+    <li>Al volver la conexión (evento <code>online</code>, al cargar y periódicamente) se llama a <code>sincronizar/estado</code> para validar la sesión y obtener un token CSRF fresco, y luego se envían las operaciones del mismo usuario <b>una a una, en orden de secuencia</b>, a <code>sincronizar/operacion</code>. Se detiene ante un error de red; las rechazadas (<code>definitivo:true</code>) quedan "por revisar" para reintentar o descartar.</li>
+    <li>Las operaciones de otro usuario guardadas en el mismo equipo no se envían ni se muestran.</li>
+</ul>
+<h3>Servidor: <code>SincronizarController</code></h3>
+<ul>
+    <li><b>Idempotencia:</b> <code>OperacionOffline::reservar()</code> inserta el uuid en <code>operaciones_offline</code> dentro de la misma transacción que crea el pago o la gestión (<code>Pago::registrar()</code>, <code>Gestion::registrar()</code>). Si el uuid ya existe (PK duplicada) se responde <code>{ok:true, duplicado:true}</code> con el recibo original. Los formularios en línea de la ruta también envían <code>op_uuid</code>, así que un reenvío por mala señal tampoco duplica.</li>
+    <li><b>Validación:</b> se reaplican todas las reglas: crédito activo y de la cartera del usuario, valor ≤ saldo, método válido, fecha de promesa.</li>
+    <li><b>Fecha del pago:</b> <code>creado_en</code> se acepta si no es futura (tolerancia 10 min) ni anterior a 7 días; si no, se usa la hora del servidor. Si <code>Caja::diaCerrado()</code> para ese cobrador y día, se usa la hora actual y la nota indica cuándo se cobró. La nota siempre empieza por "Registrado sin conexión".</li>
+    <li><b>Respuestas:</b> <code>{ok:true}</code> · <code>{ok:false, definitivo:true, mensaje}</code> (422, rechazo de negocio) · <code>{redirect}</code> (sesión vencida).</li>
+</ul>
+
+<h1>Seguridad técnica</h1>
+<table class="tabla compacta">
+    <thead><tr><th style="width:24%">Amenaza</th><th>Control implementado</th></tr></thead>
+    <tbody>
+        <tr><td>Inyección SQL</td><td>PDO con consultas preparadas y <code>ATTR_EMULATE_PREPARES=false</code>. Los únicos valores interpolados son enteros convertidos con <code>(int)</code> o listas fijas del código.</td></tr>
+        <tr><td>XSS</td><td>Toda salida pasa por <code>e()</code> (<code>htmlspecialchars</code> ENT_QUOTES). JSON embebido con <code>js_json()</code> (flags HEX). CSP con nonce por petición: <code>script-src 'self' 'nonce-…' cdn.jsdelivr.net</code>, sin <code>unsafe-inline</code> ni manejadores <code>on*</code>.</td></tr>
+        <tr><td>CSRF</td><td>Token por sesión en todo POST (<code>requirePost()</code> con <code>hash_equals</code>); el token se regenera al iniciar sesión. Las acciones que modifican datos solo aceptan POST (405 en otro caso). Cookie SameSite=Lax.</td></tr>
+        <tr><td>Control de acceso / IDOR</td><td><code>requireRole()</code> por controlador o acción y verificación de pertenencia a la cartera (<code>Auth::scopeCobrador()</code>, <code>cargar()</code> de cada controlador). Los campos sensibles (cobrador, estado, fecha del pago, quién recibe) se ignoran si los envía un cobrador.</td></tr>
+        <tr><td>Fuerza bruta</td><td><code>IntentoLogin</code> en BD: N fallos por usuario+IP, 2N por usuario y 4N por IP en la ventana. Mismo mensaje para usuario inexistente; el hash ficticio iguala el tiempo de respuesta.</td></tr>
+        <tr><td>Sesión</td><td>HttpOnly, SameSite, Secure con HTTPS, <code>use_strict_mode</code>, nuevo ID al ingresar, expiración por inactividad y absoluta, huella del navegador, y revalidación en BD en cada petición (activo, rol, <code>sesion_version</code>).</td></tr>
+        <tr><td>Contraseñas</td><td>Argon2id (m=64 MB, t=3) con rehash transparente de hashes antiguos; política de complejidad (<code>Password::validar()</code>); cambio obligatorio (<code>debe_cambiar_clave</code>).</td></tr>
+        <tr><td>Exposición</td><td><code>.htaccess</code> bloquea app/, database/, storage/, tests/, docs/, archivos ocultos y extensiones sensibles; no ejecuta otro .php distinto de index.php; sin listado de carpetas; sin X-Powered-By; métodos limitados a GET/POST/HEAD.</td></tr>
+        <tr><td>Redirección abierta</td><td><code>back()</code> solo redirige si el Referer coincide en esquema, host, puerto y ruta base (<code>Security::isInternalUrl()</code>).</td></tr>
+        <tr><td>Datos de entrada</td><td><code>input()</code> descarta arreglos inesperados; <code>parse_money()</code> estricto (null ante negativos, decimales o texto); longitudes recortadas; fechas validadas con <code>DateTime::createFromFormat</code>.</td></tr>
+        <tr><td>Excel</td><td>El texto se escribe como cadena literal (inlineStr): nunca se evalúa como fórmula.</td></tr>
+        <tr><td>Datos en el celular</td><td>Las copias de páginas se borran al cerrar sesión; descargas, ingreso y respaldos nunca se guardan. La cola sin conexión se filtra por usuario y solo se envía con una sesión válida del mismo usuario; el servidor revalida permisos, CSRF y reglas de negocio en cada operación.</td></tr>
+    </tbody>
+</table>
+<p>Ver también el <b>Manual de seguridad</b>.</p>
+
+<h1>Frontend</h1>
+<ul>
+    <li><b>Layouts:</b> <code>main</code> (aplicación), <code>auth</code> (ingreso), <code>print</code> (recibo 80 mm), <code>documento</code> (carta: estado de cuenta y paz y salvo).</li>
+    <li><b>Scripts por vista:</b> se capturan en <code>$scripts</code> con <code>ob_start()</code> y se imprimen al final del layout con <code>nonce="&lt;?= csp_nonce() ?&gt;"</code>.</li>
+    <li><b>app.js</b> ofrece: formato de miles en campos <code>data-money</code>, medidor de contraseña (<code>data-strength</code>), notificaciones (<code>apexToast()</code>), diálogo de confirmación (<code>apexConfirm()</code> y formularios con <code>data-confirm</code>, <code>data-confirm-title</code>, <code>data-confirm-btn</code>, <code>data-confirm-tone</code>, <code>data-confirm-input</code>), modales de pago y gestión, cálculo en vivo del cierre de caja y prevención de doble envío.</li>
+    <li><b>Mensajes flash:</b> <code>flash($tipo, $mensaje)</code> en el controlador; el parcial <code>views/partials/flashes.php</code> los muestra como notificaciones (o en línea en el login).</li>
+    <li><b>offline.js</b>: indicador de conexión en la barra superior, cola de cobros y gestiones sin señal, sincronización, recuadro "Guardado en este celular", precarga de pantallas y aviso "Esta acción necesita internet" en los formularios que no se pueden enviar sin señal. Arrastrar y soltar del orden de ruta (en la vista <code>ruta/index</code>).</li>
+    <li><b>Layout <code>documento</code></b> también se usa para la hoja de ruta (<code>ruta/hoja</code>), con botón de imprimir / guardar PDF.</li>
+    <li><b>Prohibido:</b> <code>confirm()</code>, <code>prompt()</code>, <code>alert()</code> y atributos <code>onclick</code> (los bloquea la CSP).</li>
+</ul>
+
+<h1>Generación de Excel</h1>
+<p><code>Xlsx</code> produce un libro OOXML válido: <code>[Content_Types].xml</code>, relaciones, propiedades del documento, <code>workbook.xml</code> (con nombres definidos para el autofiltro y los títulos de impresión), <code>styles.xml</code> y una hoja por pestaña. Los estilos se registran bajo demanda y se deduplican (<code>style()</code> devuelve el índice de <code>cellXfs</code>). Las fechas se escriben como número de serie de Excel con formato.</p>
+<p><code>ReporteExcel::hoja($nombre, $columnas, $filas, $opciones)</code> aplica el diseño corporativo. Cada columna define <code>label</code>, <code>key</code>, <code>type</code> (<code>text</code>, <code>money</code>, <code>int</code>, <code>percent</code>, <code>date</code>, <code>datetime</code>, <code>badge</code>), <code>width</code> y <code>total</code> (<code>sum</code>, <code>count</code>, <code>avg</code> o un texto). Opciones: <code>kpis</code>, <code>rowTone</code>, <code>badgeTone</code>, <code>titulo</code>, <code>nota</code>, <code>vacio</code>. Los totales usan <code>SUBTOTAL</code>, que respeta los filtros.</p>
+<pre><code>(new ReporteExcel('Título', 'Periodo …'))
+    -&gt;hoja('Hoja', [
+        ['label' =&gt; 'Cliente', 'key' =&gt; 'cliente', 'width' =&gt; 30, 'total' =&gt; 'TOTAL'],
+        ['label' =&gt; 'Valor', 'key' =&gt; 'monto', 'type' =&gt; 'money', 'total' =&gt; 'sum'],
+    ], $filas, ['kpis' =&gt; [['Total', $total, 'money', 'success']]])
+    -&gt;descargar('nombre_archivo');</code></pre>
+
+<h1>Pruebas</h1>
+<table class="tabla">
+    <thead><tr><th style="width:30%">Archivo</th><th>Alcance</th></tr></thead>
+    <tbody>
+        <tr><td><code>tests/seguridad.php</code></td><td>93 pruebas de caja negra por HTTP y verificación en BD: exposición, cabeceras, autenticación, sesiones, contraseñas, control de acceso e IDOR, CSRF, inyección, XSS, validación, Excel, router, caja, gestiones, renovaciones, documentos, respaldo y manuales. Genera <code>tests/resultado_seguridad.md</code>.</td></tr>
+        <tr><td><code>tests/prueba_funcional.php</code></td><td>32 pasos del flujo de negocio completo por HTTP, incluida la validación estructural de cada .xlsx.</td></tr>
+        <tr><td><code>tests/verificar_produccion.php</code></td><td>Verificación de solo lectura del entorno y de la integridad de los datos.</td></tr>
+    </tbody>
+</table>
+<p>Las pruebas crean datos identificados (usuarios <code>sectest*</code>, cédulas <code>999000…</code>) y los eliminan al terminar. Se validaron con pruebas de mutación: al desactivar protecciones, las pruebas correspondientes fallan.</p>
+
+<h1>Cómo extender el sistema</h1>
+<h2>Agregar un módulo</h2>
+<ol class="pasos">
+    <li>Crea la tabla con una migración nueva <code>database/migracion_vX_nombre.sql</code> (usa <code>IF NOT EXISTS</code>) y agrégala también al final de <code>schema.sql</code>.</li>
+    <li>Crea el modelo en <code>app/models/</code> extendiendo <code>App\Core\Model</code>, con <code>$table</code> y <code>$fillable</code>.</li>
+    <li>Crea el controlador en <code>app/controllers/NombreController.php</code>; llama a <code>requireLogin()</code> o <code>requireRole('admin')</code>, usa <code>requirePost()</code> en toda acción que modifique datos y verifica la pertenencia a la cartera si aplica.</li>
+    <li>Crea las vistas en <code>app/views/nombre/</code>; escapa todo con <code>e()</code> y usa <code>csrf_field()</code> en los formularios.</li>
+    <li>Registra los eventos con <code>Auditoria::log()</code> y agrega la acción a <code>Auditoria::acciones()</code>.</li>
+    <li>Agrega la opción al menú en <code>views/layouts/main.php</code> (con los roles permitidos).</li>
+    <li>Agrega pruebas en <code>tests/seguridad.php</code> (permisos, IDOR, validación) y ejecuta las tres suites.</li>
+</ol>
+<h2>Convenciones</h2>
+<ul>
+    <li>Dinero: <code>DECIMAL(14,2)</code> en BD, sin decimales en la interfaz; entrada con <code>parse_money()</code> y salida con <code>money()</code>.</li>
+    <li>Fechas: <code>Y-m-d</code> en BD; mostrar con <code>fecha()</code> y <code>fecha_larga()</code>.</li>
+    <li>Textos de la interfaz en español de Colombia; código y comentarios en español.</li>
+    <li>Nunca borrar movimientos de dinero: anular con motivo.</li>
+</ul>
+
+<h1>Base de datos</h1>
+<h2>Relaciones principales</h2>
+<table class="tabla compacta"><thead><tr><th>Tabla</th><th>Columna</th><th>Referencia a</th><th>Al eliminar el registro referenciado</th></tr></thead><tbody>
+<tr><td><code>clientes</code></td><td><code>cobrador_id</code></td><td><code>usuarios</code></td><td>Queda sin cobrador (NULL)</td></tr>
+<tr><td><code>clientes</code></td><td><code>created_by</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>asignaciones</code></td><td><code>cliente_id</code></td><td><code>clientes</code></td><td>Se borra el historial (CASCADE)</td></tr>
+<tr><td><code>asignaciones</code></td><td><code>cobrador_anterior_id / cobrador_nuevo_id / usuario_id</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>creditos</code></td><td><code>cliente_id</code></td><td><code>clientes</code></td><td>Se impide borrar el cliente (RESTRICT)</td></tr>
+<tr><td><code>creditos</code></td><td><code>renovado_de</code></td><td><code>creditos</code></td><td>Referencia lógica (sin llave foránea)</td></tr>
+<tr><td><code>creditos</code></td><td><code>created_by</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>cuotas</code></td><td><code>credito_id</code></td><td><code>creditos</code></td><td>Se borran las cuotas (CASCADE)</td></tr>
+<tr><td><code>pagos</code></td><td><code>credito_id</code></td><td><code>creditos</code></td><td>Se borran los pagos (CASCADE)</td></tr>
+<tr><td><code>pagos</code></td><td><code>cobrador_id / anulado_por</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>gestiones</code></td><td><code>credito_id</code></td><td><code>creditos</code></td><td>CASCADE</td></tr>
+<tr><td><code>gestiones</code></td><td><code>usuario_id</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>gastos</code></td><td><code>cobrador_id</code></td><td><code>usuarios</code></td><td>CASCADE</td></tr>
+<tr><td><code>gastos</code></td><td><code>registrado_por</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>cierres</code></td><td><code>cobrador_id</code></td><td><code>usuarios</code></td><td>CASCADE</td></tr>
+<tr><td><code>cierres</code></td><td><code>recibido_por</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>auditoria</code></td><td><code>usuario_id</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+<tr><td><code>operaciones_offline</code></td><td><code>usuario_id</code></td><td><code>usuarios</code></td><td>NULL</td></tr>
+</tbody></table>
+<p>En la operación normal nunca se borran créditos ni pagos: se anulan. Los borrados en cascada solo ocurren con las herramientas de mantenimiento (datos de prueba y limpieza para producción).</p>
+<h2>Diccionario de datos</h2>
+<p>Generado a partir de la estructura real de la base de datos. En los campos ENUM, los valores permitidos aparecen en la descripción.</p>
+<h3 id="t-usuarios"><code>usuarios</code></h3>
+<p>Administradores y cobradores con acceso al sistema.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>nombre</code></td><td>VARCHAR(120)</td><td>No</td><td></td><td>Nombre completo</td></tr>
+<tr><td><code>cedula</code></td><td>VARCHAR(20)</td><td>Sí</td><td>Única</td><td>Cédula (obligatoria para cobradores)</td></tr>
+<tr><td><code>telefono</code></td><td>VARCHAR(20)</td><td>Sí</td><td></td><td>Teléfono de contacto</td></tr>
+<tr><td><code>email</code></td><td>VARCHAR(120)</td><td>Sí</td><td></td><td>Correo; también sirve para iniciar sesión</td></tr>
+<tr><td><code>usuario</code></td><td>VARCHAR(50)</td><td>No</td><td>Única</td><td>Nombre de usuario para iniciar sesión (minúsculas)</td></tr>
+<tr><td><code>password</code></td><td>VARCHAR(255)</td><td>No</td><td></td><td>Hash Argon2id de la contraseña (nunca la contraseña)</td></tr>
+<tr><td><code>rol</code></td><td>ENUM</td><td>No</td><td></td><td>admin o cobrador</td></tr>
+<tr><td><code>zona</code></td><td>VARCHAR(100)</td><td>Sí</td><td></td><td>Ruta o sector que cubre el cobrador</td></tr>
+<tr><td><code>meta_diaria</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Meta de recaudo diario (0 = lo que vence en el día)</td></tr>
+<tr><td><code>activo</code></td><td>BOOLEAN</td><td>No</td><td></td><td>1 puede ingresar · 0 desactivado</td></tr>
+<tr><td><code>debe_cambiar_clave</code></td><td>BOOLEAN</td><td>No</td><td></td><td>1 obliga a cambiar la contraseña en el próximo ingreso</td></tr>
+<tr><td><code>clave_actualizada_at</code></td><td>DATETIME</td><td>Sí</td><td></td><td>Último cambio de contraseña hecho por el usuario</td></tr>
+<tr><td><code>sesion_version</code></td><td>INT UNSIGNED</td><td>No</td><td></td><td>Se incrementa para invalidar todas las sesiones abiertas</td></tr>
+<tr><td><code>ultimo_acceso</code></td><td>DATETIME</td><td>Sí</td><td></td><td>Último inicio de sesión</td></tr>
+<tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+<tr><td><code>updated_at</code></td><td>TIMESTAMP</td><td>Sí</td><td></td><td>Fecha y hora de la última modificación</td></tr>
+</tbody></table>
+<h3 id="t-clientes"><code>clientes</code></h3>
+<p>Deudores: datos personales, contacto, ubicación, referencia y cobrador asignado.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>cedula</code></td><td>VARCHAR(20)</td><td>No</td><td>Única</td><td>Cédula (única)</td></tr>
+<tr><td><code>nombres</code></td><td>VARCHAR(80)</td><td>No</td><td></td><td>Nombres</td></tr>
+<tr><td><code>apellidos</code></td><td>VARCHAR(80)</td><td>No</td><td></td><td>Apellidos</td></tr>
+<tr><td><code>email</code></td><td>VARCHAR(120)</td><td>Sí</td><td></td><td>Correo (opcional)</td></tr>
+<tr><td><code>telefono1</code></td><td>VARCHAR(20)</td><td>No</td><td></td><td>Teléfono principal</td></tr>
+<tr><td><code>telefono2</code></td><td>VARCHAR(20)</td><td>Sí</td><td></td><td>Teléfono secundario</td></tr>
+<tr><td><code>direccion</code></td><td>VARCHAR(180)</td><td>No</td><td></td><td>Dirección de residencia</td></tr>
+<tr><td><code>barrio</code></td><td>VARCHAR(100)</td><td>Sí</td><td></td><td>Barrio</td></tr>
+<tr><td><code>ciudad</code></td><td>VARCHAR(80)</td><td>Sí</td><td></td><td>Ciudad</td></tr>
+<tr><td><code>fecha_nacimiento</code></td><td>DATE</td><td>Sí</td><td></td><td>Fecha de nacimiento</td></tr>
+<tr><td><code>ocupacion</code></td><td>VARCHAR(100)</td><td>Sí</td><td></td><td>Ocupación o actividad</td></tr>
+<tr><td><code>negocio_nombre</code></td><td>VARCHAR(120)</td><td>Sí</td><td></td><td>Nombre del negocio o lugar de trabajo</td></tr>
+<tr><td><code>negocio_direccion</code></td><td>VARCHAR(180)</td><td>Sí</td><td></td><td>Dirección del negocio o trabajo</td></tr>
+<tr><td><code>referencia_nombre</code></td><td>VARCHAR(120)</td><td>Sí</td><td></td><td>Nombre de la referencia personal</td></tr>
+<tr><td><code>referencia_telefono</code></td><td>VARCHAR(20)</td><td>Sí</td><td></td><td>Teléfono de la referencia</td></tr>
+<tr><td><code>referencia_parentesco</code></td><td>VARCHAR(50)</td><td>Sí</td><td></td><td>Parentesco o relación de la referencia</td></tr>
+<tr><td><code>observaciones</code></td><td>TEXT</td><td>Sí</td><td></td><td>Notas para el cobro</td></tr>
+<tr><td><code>cobrador_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Cobrador responsable actual (define a qué cartera pertenece)</td></tr>
+<tr><td><code>orden_ruta</code></td><td>INT UNSIGNED</td><td>Sí</td><td>Índice (cobrador_id, orden_ruta)</td><td>Posición en la ruta del cobrador (NULL = al final)</td></tr>
+<tr><td><code>estado</code></td><td>ENUM</td><td>No</td><td></td><td>activo · inactivo · bloqueado (no prestar)</td></tr>
+<tr><td><code>created_by</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que lo registró</td></tr>
+<tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+<tr><td><code>updated_at</code></td><td>TIMESTAMP</td><td>Sí</td><td></td><td>Fecha y hora de la última modificación</td></tr>
+</tbody></table>
+<h3 id="t-asignaciones"><code>asignaciones</code></h3>
+<p>Historial de asignaciones y traslados de clientes entre cobradores.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>cliente_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ clientes.id</td><td>Cliente reasignado</td></tr>
+<tr><td><code>cobrador_anterior_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Cobrador anterior (NULL = sin cobrador)</td></tr>
+<tr><td><code>cobrador_nuevo_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Cobrador nuevo (NULL = sin cobrador)</td></tr>
+<tr><td><code>usuario_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que hizo el cambio</td></tr>
+<tr><td><code>motivo</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Motivo del cambio</td></tr>
+<tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-creditos"><code>creditos</code></h3>
+<p>Préstamos: condiciones, totales, saldo, estado y renovaciones.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>codigo</code></td><td>VARCHAR(20)</td><td>No</td><td>Única</td><td>Código visible CR-00001</td></tr>
+<tr><td><code>cliente_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ clientes.id</td><td>Cliente deudor</td></tr>
+<tr><td><code>renovado_de</code></td><td>INT UNSIGNED</td><td>Sí</td><td></td><td>Crédito anterior refinanciado con este</td></tr>
+<tr><td><code>monto</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Capital prestado</td></tr>
+<tr><td><code>saldo_renovado</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Saldo del crédito anterior descontado en la renovación</td></tr>
+<tr><td><code>neto_entregado</code></td><td>DECIMAL(14, 2)</td><td>Sí</td><td></td><td>Efectivo entregado al cliente (monto − saldo renovado)</td></tr>
+<tr><td><code>interes</code></td><td>DECIMAL(6, 2)</td><td>No</td><td></td><td>Porcentaje de interés total del plazo</td></tr>
+<tr><td><code>total</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Capital + interés</td></tr>
+<tr><td><code>num_cuotas</code></td><td>SMALLINT UNSIGNED</td><td>No</td><td></td><td>Número de cuotas</td></tr>
+<tr><td><code>valor_cuota</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Valor de cada cuota (la última ajusta)</td></tr>
+<tr><td><code>frecuencia</code></td><td>ENUM</td><td>No</td><td></td><td>diaria · semanal · quincenal · mensual</td></tr>
+<tr><td><code>excluir_domingos</code></td><td>BOOLEAN</td><td>No</td><td></td><td>1 = las cuotas diarias no caen en domingo</td></tr>
+<tr><td><code>fecha_inicio</code></td><td>DATE</td><td>No</td><td></td><td>Fecha del desembolso</td></tr>
+<tr><td><code>fecha_primera_cuota</code></td><td>DATE</td><td>No</td><td></td><td>Vencimiento de la primera cuota</td></tr>
+<tr><td><code>fecha_fin</code></td><td>DATE</td><td>No</td><td></td><td>Vencimiento de la última cuota</td></tr>
+<tr><td><code>total_pagado</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Suma de pagos vigentes (recalculada)</td></tr>
+<tr><td><code>saldo</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>total − total_pagado (recalculado)</td></tr>
+<tr><td><code>estado</code></td><td>ENUM</td><td>No</td><td></td><td>activo · pagado · anulado</td></tr>
+<tr><td><code>observaciones</code></td><td>TEXT</td><td>Sí</td><td></td><td>Notas del crédito</td></tr>
+<tr><td><code>motivo_anulacion</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Motivo si fue anulado</td></tr>
+<tr><td><code>created_by</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que lo creó</td></tr>
+<tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+<tr><td><code>updated_at</code></td><td>TIMESTAMP</td><td>Sí</td><td></td><td>Fecha y hora de la última modificación</td></tr>
+</tbody></table>
+<h3 id="t-cuotas"><code>cuotas</code></h3>
+<p>Plan de pagos de cada crédito, con lo abonado y su estado.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>credito_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ creditos.id</td><td>Crédito al que pertenece</td></tr>
+<tr><td><code>numero</code></td><td>SMALLINT UNSIGNED</td><td>No</td><td></td><td>Número de la cuota (1..n)</td></tr>
+<tr><td><code>fecha_vencimiento</code></td><td>DATE</td><td>No</td><td></td><td>Fecha en que vence</td></tr>
+<tr><td><code>valor</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Valor de la cuota</td></tr>
+<tr><td><code>abonado</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Valor cubierto por los pagos (recalculado)</td></tr>
+<tr><td><code>estado</code></td><td>ENUM</td><td>No</td><td></td><td>pendiente · parcial · pagada</td></tr>
+<tr><td><code>fecha_pago</code></td><td>DATE</td><td>Sí</td><td></td><td>Fecha del pago que la completó</td></tr>
+</tbody></table>
+<h3 id="t-pagos"><code>pagos</code></h3>
+<p>Pagos recibidos (y movimientos de renovación). Nunca se borran: se anulan.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>recibo</code></td><td>VARCHAR(20)</td><td>No</td><td>Única</td><td>Número de recibo RC-000001</td></tr>
+<tr><td><code>credito_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ creditos.id</td><td>Crédito abonado</td></tr>
+<tr><td><code>cobrador_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Quién recibió el dinero (define la caja y el recaudo)</td></tr>
+<tr><td><code>monto</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Valor pagado</td></tr>
+<tr><td><code>metodo</code></td><td>ENUM</td><td>No</td><td></td><td>efectivo · nequi · daviplata · transferencia · otro · renovacion (no es dinero recibido)</td></tr>
+<tr><td><code>fecha</code></td><td>DATETIME</td><td>No</td><td></td><td>Fecha y hora del pago</td></tr>
+<tr><td><code>nota</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Observación del pago</td></tr>
+<tr><td><code>anulado</code></td><td>BOOLEAN</td><td>No</td><td></td><td>1 = anulado (no cuenta para saldos ni recaudo)</td></tr>
+<tr><td><code>motivo_anulacion</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Motivo de la anulación</td></tr>
+<tr><td><code>anulado_por</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que lo anuló</td></tr>
+<tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-gestiones"><code>gestiones</code></h3>
+<p>Visitas o llamadas sin pago y promesas de pago.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>credito_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ creditos.id</td><td>Crédito gestionado</td></tr>
+<tr><td><code>usuario_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Quién hizo la gestión</td></tr>
+<tr><td><code>tipo</code></td><td>ENUM</td><td>No</td><td></td><td>visita · llamada · whatsapp</td></tr>
+<tr><td><code>resultado</code></td><td>ENUM</td><td>No</td><td></td><td>promesa · no_estaba · sin_dinero · se_niega · direccion_errada · otro</td></tr>
+<tr><td><code>fecha_promesa</code></td><td>DATE</td><td>Sí</td><td></td><td>Fecha comprometida (solo promesas)</td></tr>
+<tr><td><code>monto_promesa</code></td><td>DECIMAL(14, 2)</td><td>Sí</td><td></td><td>Valor prometido (solo promesas)</td></tr>
+<tr><td><code>nota</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Observación</td></tr>
+<tr><td><code>created_at</code></td><td>DATETIME</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-gastos"><code>gastos</code></h3>
+<p>Gastos de ruta de los cobradores.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>cobrador_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ usuarios.id</td><td>Cobrador que hizo el gasto</td></tr>
+<tr><td><code>fecha</code></td><td>DATE</td><td>No</td><td></td><td>Día del gasto</td></tr>
+<tr><td><code>concepto</code></td><td>ENUM</td><td>No</td><td></td><td>transporte · alimentacion · papeleria · recarga · otro</td></tr>
+<tr><td><code>valor</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Valor del gasto</td></tr>
+<tr><td><code>nota</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Detalle</td></tr>
+<tr><td><code>anulado</code></td><td>BOOLEAN</td><td>No</td><td></td><td>1 = anulado (no se descuenta)</td></tr>
+<tr><td><code>registrado_por</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que lo registró</td></tr>
+<tr><td><code>created_at</code></td><td>DATETIME</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-cierres"><code>cierres</code></h3>
+<p>Cierres de caja diarios: lo que el cobrador debía entregar y lo que entregó. Uno por cobrador y día.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>cobrador_id</code></td><td>INT UNSIGNED</td><td>No</td><td>→ usuarios.id</td><td>Cobrador</td></tr>
+<tr><td><code>fecha</code></td><td>DATE</td><td>No</td><td></td><td>Día cerrado</td></tr>
+<tr><td><code>recaudo_efectivo</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Efectivo cobrado ese día (foto al cerrar)</td></tr>
+<tr><td><code>recaudo_digital</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Cobrado por medios digitales</td></tr>
+<tr><td><code>gastos</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Gastos del día</td></tr>
+<tr><td><code>a_entregar</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Efectivo − gastos</td></tr>
+<tr><td><code>entregado</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>Valor recibido (negativo = reembolso al cobrador)</td></tr>
+<tr><td><code>diferencia</code></td><td>DECIMAL(14, 2)</td><td>No</td><td></td><td>entregado − a_entregar (negativo = faltante)</td></tr>
+<tr><td><code>observaciones</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Nota del cierre</td></tr>
+<tr><td><code>recibido_por</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Administrador que recibió</td></tr>
+<tr><td><code>created_at</code></td><td>DATETIME</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-configuracion"><code>configuracion</code></h3>
+<p>Parámetros editables (datos de la empresa y valores por defecto de los créditos).</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>clave</code></td><td>VARCHAR(60)</td><td>No</td><td>PK</td><td>empresa_nombre, empresa_nit, empresa_telefono, empresa_direccion, recibo_mensaje, interes_defecto, cuotas_defecto, frecuencia_defecto</td></tr>
+<tr><td><code>valor</code></td><td>TEXT</td><td>Sí</td><td></td><td>Valor del parámetro</td></tr>
+</tbody></table>
+<h3 id="t-auditoria"><code>auditoria</code></h3>
+<p>Bitácora de seguridad y operaciones.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>usuario_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que realizó la acción</td></tr>
+<tr><td><code>accion</code></td><td>VARCHAR(40)</td><td>No</td><td></td><td>Código del evento (login_ok, pago_anulado, caja_cerrada…)</td></tr>
+<tr><td><code>detalle</code></td><td>VARCHAR(500)</td><td>Sí</td><td></td><td>Descripción del evento</td></tr>
+<tr><td><code>entidad</code></td><td>VARCHAR(30)</td><td>Sí</td><td></td><td>Tipo de registro afectado</td></tr>
+<tr><td><code>entidad_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td></td><td>Id del registro afectado</td></tr>
+<tr><td><code>ip</code></td><td>VARCHAR(45)</td><td>Sí</td><td></td><td>Dirección IP de origen</td></tr>
+<tr><td><code>user_agent</code></td><td>VARCHAR(255)</td><td>Sí</td><td></td><td>Navegador de origen</td></tr>
+<tr><td><code>created_at</code></td><td>DATETIME</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-intentos_login"><code>intentos_login</code></h3>
+<p>Intentos de ingreso para el bloqueo por fuerza bruta (se depuran a los 30 días).</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>id</code></td><td>INT UNSIGNED</td><td>No</td><td>PK · autoincremental</td><td>Identificador interno</td></tr>
+<tr><td><code>usuario</code></td><td>VARCHAR(120)</td><td>No</td><td></td><td>Usuario o correo digitado</td></tr>
+<tr><td><code>ip</code></td><td>VARCHAR(45)</td><td>No</td><td></td><td>IP de origen</td></tr>
+<tr><td><code>exito</code></td><td>BOOLEAN</td><td>No</td><td></td><td>1 ingreso correcto · 0 fallido</td></tr>
+<tr><td><code>created_at</code></td><td>DATETIME</td><td>No</td><td></td><td>Fecha y hora de registro</td></tr>
+</tbody></table>
+<h3 id="t-operaciones_offline"><code>operaciones_offline</code></h3>
+<p>Identificador único de cada cobro o gestión hecho desde la ruta, para no registrarlo dos veces si llega repetido.</p>
+<table class="tabla compacta"><thead><tr><th>Columna</th><th>Tipo</th><th>Nulo</th><th>Clave / relación</th><th>Descripción</th></tr></thead><tbody>
+<tr><td><code>uuid</code></td><td>CHAR(36)</td><td>No</td><td>PK</td><td>Identificador generado en el celular</td></tr>
+<tr><td><code>usuario_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td>→ usuarios.id</td><td>Usuario que la registró</td></tr>
+<tr><td><code>tipo</code></td><td>ENUM</td><td>No</td><td></td><td>pago · gestion</td></tr>
+<tr><td><code>entidad_id</code></td><td>INT UNSIGNED</td><td>Sí</td><td></td><td>Pago o gestión creada</td></tr>
+<tr><td><code>creado_en</code></td><td>DATETIME</td><td>Sí</td><td></td><td>Hora del celular al registrarla</td></tr>
+<tr><td><code>sin_conexion</code></td><td>TINYINT(1)</td><td>No</td><td></td><td>1 = se guardó sin internet y llegó al sincronizar</td></tr>
+<tr><td><code>created_at</code></td><td>DATETIME</td><td>No</td><td>Índice (usuario_id, created_at)</td><td>Hora en que llegó al servidor</td></tr>
+</tbody></table>
+<p class="version" style="margin-top:8mm">APEX · Manual técnico · Versión 1.3 · © APEX · Desarrollado por Ing. Antony Pérez</p>
+</main>
+<script src="manual.js"></script>
+</body>
+</html>

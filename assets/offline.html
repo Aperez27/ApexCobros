@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sin conexión · APEX</title>
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #eef1f6; color: #0f172a; }
+        .caja { max-width: 420px; width: 100%; background: #fff; border-radius: 16px; padding: 28px 24px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .08); text-align: center; }
+        .marca { width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 14px; display: grid; place-items: center;
+            color: #fff; font-weight: 800; font-size: 26px; background: linear-gradient(135deg, #6366f1, #3730a3 60%, #f59e0b 150%); }
+        h1 { font-size: 20px; margin: 0 0 8px; }
+        p { color: #475569; line-height: 1.5; margin: 0 0 18px; }
+        a { display: block; padding: 12px; border-radius: 10px; background: #3730a3; color: #fff; font-weight: 700; text-decoration: none; }
+        a + a { margin-top: 8px; background: #fff; color: #3730a3; border: 1px solid #c7d2fe; }
+        h2 { font-size: 14px; margin: 22px 0 8px; text-align: left; color: #475569; }
+        ul { list-style: none; padding: 0; margin: 0; text-align: left; }
+        li { border-top: 1px solid #e2e8f0; padding: 10px 2px; color: #64748b; font-size: 14px; }
+        li a { display: inline; padding: 0; background: none; color: #3730a3; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <main class="caja">
+        <div class="marca">A</div>
+        <h1>Sin conexión a internet</h1>
+        <p>Esta pantalla no se ha abierto con internet en este celular, por eso no hay copia guardada.
+            Tu <strong>ruta de cobro</strong> sí funciona sin conexión: lo que registres queda guardado y se envía solo cuando vuelva la señal.</p>
+        <a href="{{BASE}}ruta">Abrir mi ruta de cobro</a>
+        <a href="{{BASE}}ruta/hoja">Ver hoja de ruta</a>
+        <h2>Pantallas guardadas en este celular</h2>
+        <ul>{{PAGINAS}}</ul>
+    </main>
+</body>
+</html>

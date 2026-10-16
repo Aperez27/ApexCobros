@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>APEX · Manual de instalación y puesta en producción</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<main>
+<section class="portada">
+    <div class="contenido">
+        <div class="marca">A</div>
+        <div class="producto">APEX</div>
+        <h1>Manual de instalación y puesta en producción</h1>
+        <div class="subtitulo">Requisitos, instalación en XAMPP, configuración, migraciones, verificación, respaldos automáticos, recuperación y solución de problemas.</div>
+        <div class="publico">Dirigido a: soporte técnico y administrador del servidor</div>
+    </div>
+    <div class="datos">
+        <div><strong>APEX · Sistema de control de cobros</strong>Versión 1.3 · <span data-fecha></span></div>
+        <div style="text-align:right"><strong>Desarrollado por</strong>Ing. Antony Pérez</div>
+    </div>
+</section>
+
+<nav class="indice"><h2 data-sin-indice>Contenido</h2><div id="indice"></div></nav>
+
+<h1>Requisitos</h1>
+<h2>Servidor</h2>
+<table class="tabla">
+    <thead><tr><th style="width:30%">Componente</th><th style="width:25%">Requerido</th><th>Notas</th></tr></thead>
+    <tbody>
+        <tr><td>Sistema operativo</td><td>Windows 10/11 o Linux</td><td>Probado en Windows 11 con XAMPP.</td></tr>
+        <tr><td>Servidor web</td><td>Apache 2.4</td><td>Con <code>mod_rewrite</code> y <code>mod_headers</code> activos y <code>AllowOverride All</code> (vienen así en XAMPP).</td></tr>
+        <tr><td>PHP</td><td>8.1 o superior</td><td>Probado con PHP 8.2.12.</td></tr>
+        <tr><td>Extensiones PHP</td><td><code>pdo_mysql</code>, <code>mbstring</code>, <code>zlib</code></td><td><code>curl</code> solo para las pruebas automáticas. No requiere <code>zip</code>, <code>gd</code> ni Composer.</td></tr>
+        <tr><td>Base de datos</td><td>MySQL 5.7+ o MariaDB 10.3+</td><td>Probado con MariaDB 10.4.32. Motor InnoDB, juego de caracteres utf8mb4.</td></tr>
+        <tr><td>Espacio en disco</td><td>200 MB</td><td>Más el espacio de los respaldos (aprox. 1 MB por cada 2.000 pagos).</td></tr>
+    </tbody>
+</table>
+<h2>Equipos de los usuarios</h2>
+<p>Cualquier navegador moderno: Chrome, Edge, Firefox o Safari, en computador, tableta o celular. El sistema carga Bootstrap, los íconos y las fuentes desde internet (CDN jsDelivr y Google Fonts); sin internet funciona, pero con un aspecto más simple.</p>
+<p>Para <b>trabajar sin internet</b> (consultar pantallas guardadas y cobrar desde la ruta) el navegador debe permitir <i>service workers</i> e IndexedDB: Chrome o Edge en Android, Safari en iPhone, o cualquier navegador de escritorio actual. No funciona en modo incógnito ni si se bloquean los datos de los sitios. Además, el sistema debe estar publicado con <b>HTTPS</b> (capítulo 6).</p>
+
+<h1>Instalación en XAMPP (Windows)</h1>
+<ol class="pasos">
+    <li>Instala XAMPP desde <code>apachefriends.org</code> en <code>C:\xampp</code>.</li>
+    <li>Copia la carpeta <code>ApexCobros</code> en <code>C:\xampp\htdocs\</code>.</li>
+    <li>Abre el <b>XAMPP Control Panel</b> e inicia <b>Apache</b> y <b>MySQL</b>. Para que inicien solos con Windows, marca las casillas <b>Svc</b> (instalarlos como servicio).</li>
+    <li>Crea la base de datos. En una ventana de comandos (cmd):
+<pre><code>C:\xampp\mysql\bin\mysql -uroot &lt; C:\xampp\htdocs\ApexCobros\database\schema.sql</code></pre>
+        O en phpMyAdmin (<code>http://localhost/phpmyadmin</code>) → <b>Importar</b> → <code>database\schema.sql</code>.</li>
+    <li>Revisa el archivo <code>.env</code> (ver capítulo 3).</li>
+    <li>Abre <code>http://localhost/ApexCobros</code> e ingresa con <code>admin</code> / <code>Admin123*</code>. El sistema obligará a cambiar la contraseña.</li>
+</ol>
+<div class="importante"><b>schema.sql borra y vuelve a crear todas las tablas.</b> Úsalo únicamente en una instalación nueva. Nunca lo ejecutes sobre una base con información real: para actualizar usa las migraciones (capítulo 4).</div>
+
+<h2>Instalación en Linux (Apache)</h2>
+<pre><code>sudo cp -r ApexCobros /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/ApexCobros/storage
+sudo chmod -R 750 /var/www/html/ApexCobros/storage
+sudo a2enmod rewrite headers &amp;&amp; sudo systemctl restart apache2
+mysql -u root -p &lt; /var/www/html/ApexCobros/database/schema.sql</code></pre>
+<p>En la configuración del sitio de Apache, el directorio de la aplicación debe tener <code>AllowOverride All</code> para que se aplique el archivo <code>.htaccess</code>.</p>
+
+<h1>Configuración (.env)</h1>
+<p>La configuración se encuentra en el archivo <code>.env</code> de la carpeta principal. El archivo <code>.env.example</code> sirve de plantilla. El <code>.htaccess</code> impide descargar ambos desde el navegador.</p>
+<table class="tabla">
+    <thead><tr><th style="width:30%">Variable</th><th style="width:24%">Valor por defecto</th><th>Descripción</th></tr></thead>
+    <tbody>
+        <tr><td><code>APP_NAME</code></td><td>APEX</td><td>Nombre de la aplicación.</td></tr>
+        <tr><td><code>APP_URL</code></td><td>http://localhost/ApexCobros</td><td>Dirección pública exacta, sin barra final. Se usa para los enlaces, la cookie de sesión y la protección contra redirecciones abiertas. Con HTTPS debe empezar por <code>https://</code>.</td></tr>
+        <tr><td><code>APP_TIMEZONE</code></td><td>America/Bogota</td><td>Zona horaria de fechas y horas (también se aplica a MySQL).</td></tr>
+        <tr><td><code>APP_DEBUG</code></td><td>false</td><td>En <code>true</code> muestra el detalle de los errores. <b>Siempre false en producción.</b></td></tr>
+        <tr><td><code>DB_HOST</code> / <code>DB_PORT</code></td><td>127.0.0.1 / 3306</td><td>Servidor de base de datos.</td></tr>
+        <tr><td><code>DB_NAME</code></td><td>apex_cobros_db</td><td>Nombre de la base de datos.</td></tr>
+        <tr><td><code>DB_USER</code> / <code>DB_PASS</code></td><td>root / (vacío)</td><td>Credenciales de MySQL. En producción, usuario propio con contraseña (capítulo 6).</td></tr>
+        <tr><td><code>SESSION_IDLE_MINUTES</code></td><td>30</td><td>Minutos sin actividad antes de cerrar la sesión.</td></tr>
+        <tr><td><code>SESSION_ABSOLUTE_HOURS</code></td><td>12</td><td>Duración máxima de una sesión.</td></tr>
+        <tr><td><code>LOGIN_MAX_ATTEMPTS</code></td><td>5</td><td>Intentos fallidos antes del bloqueo (por usuario + IP; ×2 por usuario; ×4 por IP).</td></tr>
+        <tr><td><code>LOGIN_LOCK_MINUTES</code></td><td>15</td><td>Duración del bloqueo y ventana de conteo de intentos.</td></tr>
+        <tr><td><code>TRUSTED_PROXIES</code></td><td>(vacío)</td><td>IPs de proxies inversos o balanceadores de confianza, separadas por coma. Solo así se lee la IP real desde <code>X-Forwarded-For</code>.</td></tr>
+    </tbody>
+</table>
+
+<h1>Actualizar una instalación existente</h1>
+<p>Las migraciones agregan tablas y columnas <b>sin borrar información</b> y se pueden ejecutar más de una vez. Antes de actualizar, saca siempre un respaldo.</p>
+<ol class="pasos">
+    <li>Saca un respaldo: <code>C:\xampp\php\php.exe database\respaldo.php</code>.</li>
+    <li>Reemplaza los archivos de la aplicación, <b>conservando</b> <code>.env</code> y la carpeta <code>storage</code>. Incluye <code>sw.js</code> y <code>manifest.webmanifest</code> de la carpeta principal.</li>
+    <li>Ejecuta las migraciones en orden:
+<pre><code>C:\xampp\mysql\bin\mysql -uroot &lt; database\migracion_seguridad.sql
+C:\xampp\mysql\bin\mysql -uroot &lt; database\migracion_v12_funciones.sql
+C:\xampp\mysql\bin\mysql -uroot &lt; database\migracion_v13_orden_ruta.sql
+C:\xampp\mysql\bin\mysql -uroot &lt; database\migracion_v14_sin_conexion.sql</code></pre></li>
+    <li>Ejecuta la verificación: <code>C:\xampp\php\php.exe tests\verificar_produccion.php</code>.</li>
+</ol>
+<table class="tabla">
+    <thead><tr><th style="width:36%">Migración</th><th>Contenido</th></tr></thead>
+    <tbody>
+        <tr><td><code>migracion_seguridad.sql</code> (v1.1)</td><td>Cambio obligatorio de contraseña, versión de sesión, tablas <code>intentos_login</code> y <code>auditoria</code>.</td></tr>
+        <tr><td><code>migracion_v12_funciones.sql</code> (v1.2)</td><td>Renovaciones (columnas en <code>creditos</code>, método <code>renovacion</code> en <code>pagos</code>), tablas <code>gestiones</code>, <code>gastos</code> y <code>cierres</code>.</td></tr>
+        <tr><td><code>migracion_v13_orden_ruta.sql</code> (v1.3)</td><td>Orden de visita de la ruta: columna <code>orden_ruta</code> en <code>clientes</code> y su índice.</td></tr>
+        <tr><td><code>migracion_v14_sin_conexion.sql</code> (v1.3)</td><td>Trabajo sin conexión: tabla <code>operaciones_offline</code>, que evita registrar dos veces un cobro o una gestión que llega repetido al sincronizar.</td></tr>
+    </tbody>
+</table>
+
+<h1>Herramientas de línea de comandos</h1>
+<p>Todas se ejecutan desde la carpeta de la aplicación con <code>C:\xampp\php\php.exe</code>, y solo funcionan por consola (no desde el navegador).</p>
+<table class="tabla">
+    <thead><tr><th style="width:38%">Comando</th><th>Uso</th></tr></thead>
+    <tbody>
+        <tr><td><code>database\respaldo.php [--dias=30]</code></td><td>Guarda un respaldo en <code>storage\backups</code> y elimina los respaldos automáticos de más de N días.</td></tr>
+        <tr><td><code>database\respaldo_diario.bat</code></td><td>Respaldo para el Programador de tareas (registra el resultado en <code>storage\logs\respaldos.log</code>).</td></tr>
+        <tr><td><code>database\restablecer_clave.php &lt;usuario&gt;</code></td><td>Asigna una contraseña temporal segura, obliga a cambiarla, reactiva al usuario y lo desbloquea.</td></tr>
+        <tr><td><code>database\limpiar_produccion.php [--confirmar] [--reiniciar-admin]</code></td><td>Deja el sistema vacío para iniciar operación (con respaldo previo). Sin <code>--confirmar</code> solo muestra lo que borraría.</td></tr>
+        <tr><td><code>database\seed_demo.php [--borrar]</code></td><td>Carga o elimina datos de demostración (usuarios <code>demo.*</code>, cédulas <code>91000…</code>). <b>No usar en producción.</b></td></tr>
+        <tr><td><code>tests\verificar_produccion.php</code></td><td>Revisión de solo lectura: configuración, servidor, seguridad, base de datos e integridad.</td></tr>
+        <tr><td><code>tests\seguridad.php</code></td><td>93 pruebas de seguridad automatizadas.</td></tr>
+        <tr><td><code>tests\prueba_funcional.php</code></td><td>32 pasos del flujo completo del negocio.</td></tr>
+    </tbody>
+</table>
+<div class="importante"><b>Antes de actualizar</b>, pide a los cobradores que se conecten y verifiquen que no tienen cobros <b>por enviar</b>. Lo pendiente se conserva en el celular y se envía después, pero conviene que llegue antes de detener el servidor.</div>
+<div class="alerta">Las pruebas (<code>seguridad.php</code> y <code>prueba_funcional.php</code>) crean y eliminan datos temporales, pero consumen los consecutivos (códigos de crédito y recibo). Ejecútalas <b>antes</b> de iniciar la operación o en una copia del sistema.</div>
+
+<h1>Puesta en producción</h1>
+<h2>Lista de verificación</h2>
+<ul class="checklist">
+    <li>Ejecutar <code>tests\seguridad.php</code> y <code>tests\prueba_funcional.php</code>: todo correcto.</li>
+    <li>Limpiar los datos de prueba: <code>database\limpiar_produccion.php --confirmar</code>.</li>
+    <li><code>APP_DEBUG=false</code> en <code>.env</code>.</li>
+    <li>Contraseña del administrador cambiada.</li>
+    <li>Datos de la empresa registrados en Configuración.</li>
+    <li>Usuario de MySQL propio con contraseña.</li>
+    <li>Versión de Apache oculta.</li>
+    <li>HTTPS: obligatorio si el sistema se publica en internet y para que los celulares puedan trabajar sin conexión.</li>
+    <li>Migraciones v1.3 aplicadas (<code>migracion_v13_orden_ruta.sql</code> y <code>migracion_v14_sin_conexion.sql</code>) si se actualizó una instalación anterior.</li>
+    <li>Prueba en un celular real: abrir la ruta con señal, activar el modo avión, registrar un cobro, quitar el modo avión y verificar que llegó a <span class="menu">Pagos</span>.</li>
+    <li>Respaldo diario programado y copia fuera del equipo.</li>
+    <li>Ejecutar <code>tests\verificar_produccion.php</code>: 0 errores.</li>
+</ul>
+
+<h2>Usuario de MySQL dedicado</h2>
+<p>La aplicación no debe conectarse como <code>root</code>. En phpMyAdmin → pestaña <b>SQL</b> (cambia la contraseña del ejemplo):</p>
+<pre><code>CREATE USER 'apex_app'@'localhost' IDENTIFIED BY 'Cambia.Esta#Clave2026';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP, REFERENCES
+    ON apex_cobros_db.* TO 'apex_app'@'localhost';
+FLUSH PRIVILEGES;</code></pre>
+<p>Luego en <code>.env</code>: <code>DB_USER=apex_app</code> y <code>DB_PASS=Cambia.Esta#Clave2026</code>. Asígnale también una contraseña al usuario <code>root</code> de MySQL y actualízala en <code>C:\xampp\phpMyAdmin\config.inc.php</code>.</p>
+<div class="nota">Los permisos <code>CREATE</code>, <code>ALTER</code>, <code>DROP</code> son necesarios para las migraciones, para la herramienta de limpieza (<code>TRUNCATE</code>) y para restaurar respaldos. Si prefieres un usuario de solo datos, ejecuta esas tareas con un usuario administrador de MySQL.</div>
+
+<h2>Ocultar la versión de Apache</h2>
+<p>En <code>C:\xampp\apache\conf\httpd.conf</code> agrega al final y reinicia Apache:</p>
+<pre><code>ServerTokens Prod
+ServerSignature Off</code></pre>
+<p>Este cambio afecta a todos los sitios del XAMPP.</p>
+
+<h2>HTTPS (publicación en internet)</h2>
+<ol class="pasos">
+    <li>Obtén un certificado SSL para tu dominio (por ejemplo, gratuito con Let's Encrypt, o el que ofrezca el hosting).</li>
+    <li>Configura el sitio en el puerto 443 y redirige el tráfico HTTP a HTTPS.</li>
+    <li>Cambia <code>APP_URL</code> a <code>https://tu-dominio.com</code> (o la ruta correspondiente).</li>
+</ol>
+<p>Al detectar HTTPS, APEX activa automáticamente la cookie de sesión <code>Secure</code> y la cabecera <code>Strict-Transport-Security</code>.</p>
+<p><b>HTTPS también es necesario para trabajar sin internet.</b> Los navegadores solo permiten el <i>service worker</i> (<code>sw.js</code>) en páginas <code>https://</code> o en <code>localhost</code>. Con <code>http://</code> desde otro equipo, el sistema funciona normalmente pero solo con conexión: ni la consulta de copias guardadas ni el cobro sin señal estarán disponibles.</p>
+<div class="importante">No publiques el sistema en internet sin HTTPS: las contraseñas y los datos viajarían sin cifrar.</div>
+
+<h2>Verificación final</h2>
+<pre><code>C:\xampp\php\php.exe tests\verificar_produccion.php</code></pre>
+<p>Muestra cada verificación como OK, AVISO o ERROR y guarda el informe en <code>tests\resultado_produccion.md</code>. Con 0 errores el sistema está listo; las advertencias son recomendaciones. Puedes ejecutarla en cualquier momento porque no modifica nada.</p>
+
+<h1>Respaldos y recuperación</h1>
+<h2>Respaldo manual</h2>
+<p>Desde el sistema: menú <span class="menu">Respaldo</span> → <b>Descargar respaldo ahora</b>. Desde la consola: <code>C:\xampp\php\php.exe database\respaldo.php</code> (queda en <code>storage\backups</code>).</p>
+<h2>Respaldo automático diario (Programador de tareas de Windows)</h2>
+<ol class="pasos">
+    <li>Abre el <b>Programador de tareas</b> → <b>Crear tarea básica</b>.</li>
+    <li>Nombre: "APEX respaldo diario". Desencadenador: <b>Diariamente</b>, a una hora en que el equipo esté encendido (por ejemplo 9:00 p. m.).</li>
+    <li>Acción: <b>Iniciar un programa</b> → <code>C:\xampp\htdocs\ApexCobros\database\respaldo_diario.bat</code>.</li>
+    <li>En las propiedades marca <b>Ejecutar tanto si el usuario inició sesión como si no</b>.</li>
+    <li>Verifica al día siguiente: debe existir un archivo <code>auto_AAAA-MM-DD_HHMMSS.sql</code> en <code>storage\backups</code> y una línea en <code>storage\logs\respaldos.log</code>.</li>
+</ol>
+<p>Se conservan los respaldos automáticos de los últimos 30 días. Los respaldos manuales y los previos a una limpieza no se borran nunca.</p>
+<div class="importante"><b>Un respaldo en el mismo equipo no protege contra daños del disco, robo o virus.</b> Copia periódicamente la carpeta <code>storage\backups</code> a una memoria USB o a la nube. Los respaldos contienen datos personales: guárdalos cifrados o en un lugar con acceso restringido.</div>
+<h2>Restaurar un respaldo</h2>
+<ol class="pasos">
+    <li>Saca un respaldo del estado actual (por si necesitas volver atrás).</li>
+    <li>Restaura con phpMyAdmin (base <code>apex_cobros_db</code> → <b>Importar</b> → archivo .sql) o por consola:
+<pre><code>C:\xampp\mysql\bin\mysql -uroot apex_cobros_db &lt; storage\backups\archivo.sql</code></pre></li>
+    <li>Ejecuta <code>tests\verificar_produccion.php</code> para comprobar la integridad.</li>
+</ol>
+<div class="consejo"><b>Prueba tus respaldos.</b> Una vez al mes restaura el último respaldo en una base de datos de prueba (por ejemplo <code>apex_prueba</code>) y verifica que tenga la información. Un respaldo que no se ha probado no es un respaldo confiable.</div>
+
+<h1>Mantenimiento</h1>
+<table class="tabla">
+    <thead><tr><th style="width:24%">Frecuencia</th><th>Tarea</th></tr></thead>
+    <tbody>
+        <tr><td>Diaria</td><td>Verificar el respaldo automático; copiarlo fuera del equipo.</td></tr>
+        <tr><td>Semanal</td><td>Revisar <code>storage\logs\php-error.log</code> (debe estar vacío o no existir) y <code>respaldos.log</code>.</td></tr>
+        <tr><td>Mensual</td><td>Ejecutar <code>tests\verificar_produccion.php</code>; probar la restauración de un respaldo; instalar las actualizaciones de seguridad de Windows.</td></tr>
+        <tr><td>Semestral</td><td>Evaluar la actualización de XAMPP (PHP, Apache, MariaDB). Hacerla primero en una copia y ejecutar las pruebas.</td></tr>
+    </tbody>
+</table>
+<p>Los intentos de ingreso de más de 30 días se depuran solos. La tabla de auditoría crece con el uso (aproximadamente 1 MB por cada 5.000 eventos); no requiere depuración en el uso normal.</p>
+
+<h1>Solución de problemas</h1>
+<table class="tabla">
+    <thead><tr><th style="width:32%">Síntoma</th><th>Causa probable y solución</th></tr></thead>
+    <tbody>
+        <tr><td>"Not Found" al entrar a cualquier pantalla que no sea el inicio</td><td><code>mod_rewrite</code> desactivado o <code>AllowOverride None</code>. Actívalos en <code>httpd.conf</code> y reinicia Apache.</td></tr>
+        <tr><td>"Error de base de datos" o "No fue posible conectar"</td><td>MySQL apagado o credenciales de <code>.env</code> incorrectas. Inicia MySQL en el panel de XAMPP y revisa <code>DB_*</code>.</td></tr>
+        <tr><td>La página se ve sin estilos</td><td>Sin acceso a internet (CDN) o <code>APP_URL</code> mal escrita. Revisa la dirección en <code>.env</code>.</td></tr>
+        <tr><td>Siempre vuelve al inicio de sesión</td><td><code>APP_URL</code> no coincide con la dirección usada en el navegador (la cookie de sesión se emite para esa ruta), o el navegador bloquea cookies.</td></tr>
+        <tr><td>"Demasiados intentos fallidos"</td><td>Bloqueo de 15 minutos. Para desbloquear de inmediato: <code>database\restablecer_clave.php usuario</code>.</td></tr>
+        <tr><td>Nadie recuerda la contraseña del administrador</td><td><code>C:\xampp\php\php.exe database\restablecer_clave.php admin</code> muestra una contraseña temporal.</td></tr>
+        <tr><td>"Error inesperado"</td><td>Revisa <code>storage\logs\php-error.log</code>. Para ver el detalle en pantalla, pon temporalmente <code>APP_DEBUG=true</code> y vuelve a <code>false</code> al terminar.</td></tr>
+        <tr><td>Las horas aparecen corridas</td><td>Revisa <code>APP_TIMEZONE</code> y la hora del equipo.</td></tr>
+        <tr><td>El respaldo automático no se generó</td><td>MySQL apagado a esa hora o tarea mal configurada. Revisa <code>storage\logs\respaldos.log</code> y el historial de la tarea.</td></tr>
+        <tr><td>Sin internet no abre nada en el celular (error del navegador)</td><td>El sitio no está en HTTPS, el celular nunca abrió el sistema con señal o el navegador está en modo incógnito. Revisa <code>APP_URL</code> y el certificado.</td></tr>
+        <tr><td>Los cobros sin conexión no llegan al sistema</td><td>Falta la migración <code>migracion_v14_sin_conexion.sql</code>, o el cobrador no ha vuelto a ingresar después de que se venció su sesión. Revisa <code>storage\logs\php-error.log</code>.</td></tr>
+        <tr><td>"Organizar ruta" no guarda el orden</td><td>Falta la migración <code>migracion_v13_orden_ruta.sql</code>.</td></tr>
+        <tr><td>Tras actualizar, un celular sigue mostrando la versión anterior</td><td>El celular usa el <i>service worker</i> anterior hasta recargar. Cierra todas las pestañas de APEX y ábrelo de nuevo con señal.</td></tr>
+        <tr><td>Los reportes no se descargan</td><td>Revisa que el usuario sea administrador y que no haya un bloqueador de descargas. Los archivos son .xlsx y abren en Excel 2010 o superior, LibreOffice y Google Sheets.</td></tr>
+    </tbody>
+</table>
+
+<h1>Estructura de archivos</h1>
+<pre><code>ApexCobros/
+├── index.php                  Punto de entrada único (front controller)
+├── sw.js                      Service worker: copias de pantallas para consultar sin internet
+├── manifest.webmanifest       Datos para instalar APEX como aplicación en el celular
+├── .htaccess                  URLs limpias, bloqueo de carpetas internas, cabeceras
+├── .env / .env.example        Configuración
+├── app/                       Código de la aplicación (bloqueado desde el navegador)
+│   ├── core/  controllers/  models/  services/  views/  helpers/  config/
+├── assets/                    CSS, JavaScript (offline.js: cola de cobros sin conexión) e íconos
+├── database/                  schema.sql, migraciones y herramientas de consola
+├── docs/                      Manuales (PDF) y sus fuentes
+├── storage/
+│   ├── logs/                  php-error.log, respaldos.log
+│   └── backups/               Respaldos .sql (bloqueado desde el navegador)
+└── tests/                     Pruebas y verificación de producción</code></pre>
+<p class="version" style="margin-top:8mm">APEX · Manual de instalación y puesta en producción · Versión 1.3 · © APEX · Desarrollado por Ing. Antony Pérez</p>
+</main>
+<script src="manual.js"></script>
+</body>
+</html>

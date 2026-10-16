@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>APEX · Procedimientos operativos</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<main>
+<section class="portada">
+    <div class="contenido">
+        <div class="marca">A</div>
+        <div class="producto">APEX</div>
+        <h1>Procedimientos operativos</h1>
+        <div class="subtitulo">Rutinas diarias, semanales y mensuales para operar el negocio de cobros con APEX de forma ordenada, controlada y segura.</div>
+        <div class="publico">Dirigido a: dueño del negocio, administradores y cobradores</div>
+    </div>
+    <div class="datos">
+        <div><strong>APEX · Sistema de control de cobros</strong>Versión 1.3 · <span data-fecha></span></div>
+        <div style="text-align:right"><strong>Desarrollado por</strong>Ing. Antony Pérez</div>
+    </div>
+</section>
+
+<nav class="indice"><h2 data-sin-indice>Contenido</h2><div id="indice"></div></nav>
+
+<h1>Propósito</h1>
+<p class="lead">Este documento describe <b>cómo trabajar</b> con APEX en el día a día. Los manuales explican qué hace cada pantalla; aquí se explica en qué orden, con qué frecuencia y quién debe hacer cada tarea para que la información sea confiable y el dinero esté controlado.</p>
+<h2>Responsables</h2>
+<table class="tabla">
+    <thead><tr><th style="width:26%">Rol</th><th>Responsabilidades</th></tr></thead>
+    <tbody>
+        <tr><td><b>Dueño / gerente</b></td><td>Define las políticas de crédito (montos, intereses, plazos), revisa los informes mensuales y la auditoría, custodia los respaldos.</td></tr>
+        <tr><td><b>Administrador</b></td><td>Crea créditos y renovaciones, recibe el dinero y cierra la caja de cada cobrador, corrige errores (anulaciones), asigna cartera, saca reportes y respaldos.</td></tr>
+        <tr><td><b>Cobrador</b></td><td>Mantiene organizado el orden de visita de su ruta, hace la ruta, registra cada pago en el momento (con o sin señal), registra las gestiones cuando no le pagan, anota sus gastos y entrega el efectivo al final del día.</td></tr>
+    </tbody>
+</table>
+<h2>Ciclo de vida de un crédito</h2>
+<div class="diagrama"><div class="flujo">
+    <div class="caja"><b>1. Cliente</b>Registro y asignación de cobrador</div><span class="flecha">→</span>
+    <div class="caja"><b>2. Evaluación</b>Calificación y referencia</div><span class="flecha">→</span>
+    <div class="caja"><b>3. Crédito</b>Plan de cuotas y desembolso</div><span class="flecha">→</span>
+    <div class="caja"><b>4. Cobro</b>Ruta, pagos y gestiones</div><span class="flecha">→</span>
+    <div class="caja"><b>5. Caja</b>Cierre diario del efectivo</div><span class="flecha">→</span>
+    <div class="caja"><b>6. Cierre</b>Pagado: paz y salvo o renovación</div>
+</div></div>
+
+<h1>Rutina diaria</h1>
+<h2>Al iniciar el día (administrador)</h2>
+<ul class="checklist">
+    <li>Revisar el <b>panel</b>: cartera, vencido y efectivo en la calle.</li>
+    <li>Revisar las <b>promesas de pago para hoy</b> y avisar a los cobradores.</li>
+    <li>Revisar los <b>créditos en mora</b> más antiguos y decidir acciones (visita del administrador, llamada).</li>
+    <li>Confirmar que la <b>caja del día anterior</b> de todos los cobradores quedó cerrada (en <span class="menu">Caja</span>, fecha de ayer, no debe haber pendientes).</li>
+    <li>Entregar los desembolsos de los créditos nuevos aprobados.</li>
+    <li>Si un cobrador trabajará sin celular, imprimirle la <b>hoja de ruta</b> del día.</li>
+</ul>
+<h2>Durante la ruta (cobrador)</h2>
+<ol class="pasos">
+    <li>Ingresar a APEX <b>con señal</b> (wifi o datos) y abrir la ruta antes de salir: así queda guardada en el celular por si se pierde la conexión. Revisar primero los atrasados (borde rojo) y las promesas de hoy.</li>
+    <li>Si cambió el recorrido (clientes nuevos, cambios de dirección), ajustar el <b>orden de visita</b> con <b>Organizar ruta</b>.</li>
+    <li>Registrar cada pago <b>en el momento</b> de recibirlo y enviar el recibo por WhatsApp. <b>Sin señal se sigue registrando igual</b> desde la Ruta de cobro: queda guardado en el celular y se envía solo al volver la conexión. Nunca anotarlo en papel para registrarlo después ni repetirlo.</li>
+    <li>Registrar una <b>gestión</b> en cada visita sin pago, con el motivo real y, si aplica, la promesa.</li>
+    <li>Registrar cada <b>gasto</b> de ruta el mismo día.</li>
+    <li>Revisar el avance de la meta a mitad de la jornada.</li>
+</ol>
+<h2>Al cerrar el día</h2>
+<ol class="pasos">
+    <li>El cobrador se conecta a internet y confirma que la barra superior <b>no diga "por enviar" ni "por revisar"</b>. Si quedó algo por revisar, lo resuelve con el administrador antes del cierre.</li>
+    <li>El cobrador revisa en <span class="menu">Caja</span> el valor <b>Debes entregar</b> y prepara el efectivo.</li>
+    <li>El administrador cuenta el dinero frente al cobrador.</li>
+    <li>El administrador registra el <b>cierre</b> con el valor recibido. Si hay diferencia, escribe una nota explicativa.</li>
+    <li>Si hay <b>faltante</b>, se acuerda con el cobrador cómo se repone (queda registrado como efectivo en su poder).</li>
+    <li>El administrador descarga el <b>respaldo</b> del día (o verifica que el respaldo automático se haya ejecutado).</li>
+</ol>
+<div class="importante"><b>Regla de oro:</b> ningún cobrador termina el día sin cierre de caja. Un cierre pendiente es dinero sin control.</div>
+
+<h1>Rutina semanal</h1>
+<ul class="checklist">
+    <li><b>Mora:</b> descargar el reporte <b>Créditos en mora</b> y revisar los que llevan más de 7 días. Los que pasan de 30 días requieren visita del administrador.</li>
+    <li><b>Promesas:</b> revisar en <span class="menu">Reportes</span> el cumplimiento de promesas por cobrador. Un cumplimiento bajo indica promesas poco realistas o falta de seguimiento.</li>
+    <li><b>Caja:</b> revisar el reporte <b>Caja y cierres</b> y los faltantes acumulados de cada cobrador.</li>
+    <li><b>Auditoría:</b> revisar pagos anulados, ingresos fallidos y accesos denegados. Revisar también los pagos <b>"sin conexión"</b> que entraron con la fecha del envío porque su día ya estaba cerrado (la nota dice cuándo se cobraron).</li>
+    <li><b>Clientes sin cobrador:</b> el panel avisa si hay clientes sin asignar; asignarlos.</li>
+    <li><b>Copia externa:</b> llevar el respaldo más reciente a un lugar fuera de la oficina.</li>
+</ul>
+
+<h1>Rutina mensual</h1>
+<ul class="checklist">
+    <li>Descargar el <b>Informe gerencial completo</b> del mes (todas las hojas en un solo Excel) y archivarlo.</li>
+    <li>Revisar la <b>rentabilidad</b>: capital colocado, recaudo, interés ganado, gastos y utilidad. Compararla con el mes anterior.</li>
+    <li>Revisar el <b>% de mora</b> por cobrador en el reporte de cartera y tomar acciones con quien supere el 10 %.</li>
+    <li>Depurar clientes: pasar a <b>Inactivo</b> a quienes ya no trabajan con la empresa y a <b>Bloqueado</b> a quienes no se les debe volver a prestar.</li>
+    <li>Revisar los usuarios: desactivar a quienes ya no trabajan y confirmar que cada cobrador tenga su meta diaria actualizada.</li>
+    <li>Verificar que el respaldo automático se esté ejecutando (en <span class="menu">Auditoría</span>, acción "Respaldo de datos").</li>
+</ul>
+
+<h1>Política de crédito sugerida</h1>
+<p>APEX calcula una calificación objetiva para cada cliente. Se recomienda usarla así (ajústala a la política de tu negocio):</p>
+<table class="tabla">
+    <thead><tr><th style="width:18%">Calificación</th><th>Nuevo crédito</th><th>Renovación</th></tr></thead>
+    <tbody>
+        <tr><td><span class="chip a">A</span></td><td>Aprobar. Se puede aumentar el monto hasta un 50 %.</td><td>Sí, en cualquier momento.</td></tr>
+        <tr><td><span class="chip b">B</span></td><td>Aprobar con el mismo monto anterior.</td><td>Sí, cuando lleve pagado al menos el 60 %.</td></tr>
+        <tr><td><span class="chip c">C</span></td><td>Solo con montos menores y plazos cortos.</td><td>Solo cuando esté al día.</td></tr>
+        <tr><td><span class="chip d">D</span></td><td>No prestar. Considerar pasar al cliente a <b>Bloqueado</b>.</td><td>No.</td></tr>
+        <tr><td><span class="chip n">N</span></td><td>Cliente nuevo: monto pequeño, verificar la referencia personal y la dirección.</td><td>—</td></tr>
+    </tbody>
+</table>
+
+<h1>Procedimientos especiales</h1>
+<h2>Ingreso de un cobrador nuevo</h2>
+<ol class="pasos">
+    <li>Crear su usuario (rol Cobrador, cédula, teléfono, zona y meta diaria) con una contraseña temporal.</li>
+    <li>Entregarle el <b>Manual del cobrador</b> y acompañarlo en su primer ingreso para que cree su contraseña.</li>
+    <li>Asignarle los clientes (asignación masiva o traslado de cartera).</li>
+    <li>Revisar al final del primer día su caja y sus gestiones.</li>
+</ol>
+<h2>Retiro de un cobrador</h2>
+<ol class="pasos">
+    <li>Cerrar su caja y recibir todo su <b>efectivo en mano</b> (debe quedar en cero).</li>
+    <li><b>Trasladar su cartera</b> completa a otro cobrador indicando el motivo.</li>
+    <li><b>Desactivar</b> su usuario (su sesión se cierra en ese instante). No se elimina para conservar su historial.</li>
+</ol>
+<h2>Vacaciones o incapacidad</h2>
+<p>Trasladar la cartera al cobrador reemplazante con el motivo "Vacaciones de …". Al regreso, trasladarla de vuelta. El historial de cada cliente conserva ambos movimientos.</p>
+<h2>Corrección de errores</h2>
+<table class="tabla">
+    <thead><tr><th style="width:34%">Error</th><th>Cómo corregirlo</th></tr></thead>
+    <tbody>
+        <tr><td>Pago con valor equivocado o duplicado</td><td>El administrador anula el pago con el motivo y se registra el correcto. Nunca registrar un pago "negativo" o de compensación.</td></tr>
+        <tr><td>Pago registrado al crédito equivocado</td><td>Anular el pago y registrarlo en el crédito correcto.</td></tr>
+        <tr><td>Crédito con condiciones equivocadas</td><td>Si no tiene pagos: anularlo y crearlo de nuevo. Si tiene pagos: anular los pagos, anular el crédito y volver a crear todo.</td></tr>
+        <tr><td>Renovación equivocada</td><td>Anular el crédito nuevo: el anterior vuelve a quedar activo con su saldo.</td></tr>
+        <tr><td>Gasto equivocado</td><td>El cobrador lo anula el mismo día; después, solo el administrador.</td></tr>
+        <tr><td>Cierre de caja con valor equivocado</td><td>Volver a cerrar la caja de ese día con el valor correcto (reemplaza el anterior).</td></tr>
+    </tbody>
+</table>
+<div class="nota">Todas las correcciones quedan en la <b>auditoría</b> con el motivo, quién las hizo y cuándo.</div>
+<h2>Trabajo sin internet</h2>
+<table class="tabla">
+    <thead><tr><th style="width:34%">Situación</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+        <tr><td>El cobrador se queda sin señal en la ruta</td><td>Sigue cobrando desde la Ruta de cobro. Al recuperar la señal todo se envía solo y en orden. No debe registrar nada dos veces.</td></tr>
+        <tr><td>Se le venció la sesión sin señal</td><td>Nada se pierde. Al tener señal, vuelve a ingresar con <b>su mismo usuario</b> y lo guardado se envía.</td></tr>
+        <tr><td>Un cobro quedó "por revisar"</td><td>El sistema lo rechazó (por ejemplo, el crédito fue anulado o el valor supera el saldo). El motivo aparece en la ruta. El administrador decide: corregir y reintentar, o descartarlo y registrar el pago correcto.</td></tr>
+        <tr><td>El cobrador no tiene celular o se le descargó</td><td>Trabaja con la <b>hoja de ruta</b> impresa, anotando lo recibido. Al volver, el administrador registra los pagos en oficina con la fecha real del cobro.</td></tr>
+        <tr><td>Se cambia el celular de un cobrador</td><td>Antes de entregarlo, el cobrador se conecta y verifica que no quede nada por enviar. Luego cierra sesión.</td></tr>
+    </tbody>
+</table>
+
+<h2>Faltantes de caja</h2>
+<ol class="pasos">
+    <li>Registrar el cierre con el valor <b>realmente</b> recibido y una nota del motivo.</li>
+    <li>El faltante queda como efectivo en poder del cobrador y aparece en el panel, en su cartera y en los reportes.</li>
+    <li>Cuando lo reponga, se registra en el siguiente cierre: el valor entregado será mayor al esperado y el efectivo en mano vuelve a cero.</li>
+</ol>
+<h2>Pérdida o robo del celular de un cobrador</h2>
+<ol class="pasos">
+    <li>Desactivar de inmediato su usuario en <span class="menu">Usuarios</span> (o asignarle una contraseña nueva): cualquier sesión abierta en ese celular se cierra al instante.</li>
+    <li>Revisar en la <b>auditoría</b> la actividad de su usuario desde la última hora en que tuvo el celular.</li>
+    <li>Preguntar al cobrador qué cobró desde la última vez que tuvo señal: lo que tenía <b>guardado sin enviar</b> en ese celular no llega al sistema. Registrar esos pagos en oficina con su fecha real.</li>
+    <li>Cuando tenga un equipo nuevo, reactivarlo con una contraseña temporal.</li>
+</ol>
+
+<h1>Indicadores clave</h1>
+<table class="tabla">
+    <thead><tr><th style="width:26%">Indicador</th><th style="width:34%">Dónde verlo</th><th>Meta sugerida</th></tr></thead>
+    <tbody>
+        <tr><td>% de mora</td><td>Panel, reporte de cartera</td><td>Menor al 10 % de la cartera.</td></tr>
+        <tr><td>Avance de la meta diaria</td><td>Panel, ruta, cobradores</td><td>100 % todos los días.</td></tr>
+        <tr><td>Cumplimiento de promesas</td><td>Reportes, reporte de gestiones</td><td>Mayor al 70 %.</td></tr>
+        <tr><td>Créditos con más de 30 días de mora</td><td>Reporte de mora</td><td>Ninguno sin gestión de la última semana.</td></tr>
+        <tr><td>Cierres cuadrados</td><td>Reporte de caja</td><td>Más del 95 %.</td></tr>
+        <tr><td>Margen</td><td>Rentabilidad</td><td>Estable o creciente mes a mes.</td></tr>
+        <tr><td>Clientes A + B</td><td>Reporte de clientes</td><td>Más del 70 % de los clientes con historial.</td></tr>
+    </tbody>
+</table>
+<p class="version" style="margin-top:10mm">APEX · Procedimientos operativos · Versión 1.3 · © APEX · Desarrollado por Ing. Antony Pérez</p>
+</main>
+<script src="manual.js"></script>
+</body>
+</html>

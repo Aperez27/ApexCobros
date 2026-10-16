@@ -1,0 +1,22 @@
+# Configuración local (usar .env.example como plantilla)
+.env
+
+# Respaldos y registros (datos reales de clientes)
+storage/backups/*
+!storage/backups/.gitignore
+storage/logs/*
+!storage/logs/.gitignore
+*.sql.gz
+
+# Dependencias para regenerar los manuales
+node_modules/
+package-lock.json
+__pycache__/
+
+# Sistema operativo y editores
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+.claude/

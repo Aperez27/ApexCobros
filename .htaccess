@@ -1,0 +1,40 @@
+Options -Indexes -MultiViews
+RewriteEngine On
+
+# Bloquear carpetas internas, archivos ocultos y de documentación/datos
+RewriteRule ^(app|database|storage|tests|docs|vendor)(/|$) - [F,L]
+RewriteRule (^|/)\. - [F,L]
+RewriteRule \.(md|sql|log|sh|bat|ini|env|lock|json|bak|old|orig|dist|example)$ - [F,L,NC]
+
+# Solo los métodos que usa la aplicación
+RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$
+RewriteRule .* - [F,L]
+
+# Todo lo que no sea un archivo existente pasa por el front controller
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Ningún .php distinto de index.php se ejecuta directamente
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^(?!index\.php$).+\.php$ - [F,L,NC]
+
+# Aplicación instalable y trabajo sin conexión (ruta de cobro)
+AddType application/manifest+json .webmanifest
+<Files "sw.js">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache"
+    </IfModule>
+</Files>
+
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header setifempty X-Content-Type-Options "nosniff"
+    Header setifempty Referrer-Policy "same-origin"
+    Header setifempty X-Frame-Options "DENY"
+</IfModule>
+
+<IfModule mod_php.c>
+    php_flag expose_php Off
+    php_flag display_errors Off
+</IfModule>

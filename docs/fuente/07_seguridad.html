@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>APEX · Manual de seguridad</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<main>
+<section class="portada">
+    <div class="contenido">
+        <div class="marca">A</div>
+        <div class="producto">APEX</div>
+        <h1>Manual de seguridad</h1>
+        <div class="subtitulo">Políticas de acceso y contraseñas, controles implementados, auditoría, respaldos, respuesta a incidentes y tratamiento de datos personales.</div>
+        <div class="publico">Dirigido a: dueño del negocio, administradores y soporte técnico</div>
+    </div>
+    <div class="datos">
+        <div><strong>APEX · Sistema de control de cobros</strong>Versión 1.3 · <span data-fecha></span></div>
+        <div style="text-align:right"><strong>Desarrollado por</strong>Ing. Antony Pérez</div>
+    </div>
+</section>
+
+<nav class="indice"><h2 data-sin-indice>Contenido</h2><div id="indice"></div></nav>
+
+<h1>Objetivo y alcance</h1>
+<p class="lead">APEX maneja dinero y datos personales de clientes. Este manual define las reglas para proteger la <b>confidencialidad</b> (solo quien debe ve la información), la <b>integridad</b> (nadie altera los registros sin dejar rastro) y la <b>disponibilidad</b> (la información no se pierde) del sistema.</p>
+<p>Aplica a todas las personas con usuario en el sistema y a quienes administran el servidor donde está instalado.</p>
+
+<h1>Política de acceso</h1>
+<h2>Usuarios</h2>
+<ul>
+    <li>Cada persona tiene <b>un usuario personal</b>. Está prohibido compartir usuarios o contraseñas.</li>
+    <li>Se asigna el <b>mínimo privilegio</b>: los cobradores tienen rol Cobrador; solo el dueño y quien maneja la caja tienen rol Administrador.</li>
+    <li>Cuando una persona deja de trabajar, su usuario se <b>desactiva el mismo día</b> (sus sesiones se cierran en ese instante).</li>
+    <li>Se recomienda tener <b>dos administradores</b> para no depender de una sola persona.</li>
+</ul>
+<h2>Permisos por rol</h2>
+<p>Los permisos se validan en el servidor en cada petición; ocultar un botón no es la protección, la regla del servidor sí lo es.</p>
+<table class="tabla compacta">
+    <thead><tr><th>Información o acción</th><th style="width:20%;text-align:center">Administrador</th><th style="width:26%;text-align:center">Cobrador</th></tr></thead>
+    <tbody>
+        <tr><td>Clientes, créditos, pagos y documentos</td><td style="text-align:center" class="si">Todos</td><td style="text-align:center" class="si">Solo de su cartera</td></tr>
+        <tr><td>Registrar pagos</td><td style="text-align:center" class="si">Sí, con fecha anterior</td><td style="text-align:center" class="si">Solo con fecha y hora actuales, a su nombre (sin conexión: la hora del cobro, máximo 7 días atrás y nunca en un día con caja cerrada)</td></tr>
+        <tr><td>Ordenar la ruta</td><td style="text-align:center" class="si">De cualquier cobrador</td><td style="text-align:center" class="si">Solo la suya</td></tr>
+        <tr><td>Crear, renovar y anular créditos; anular pagos</td><td style="text-align:center" class="si">Sí</td><td style="text-align:center" class="no">No</td></tr>
+        <tr><td>Asignar clientes, cambiar estados</td><td style="text-align:center" class="si">Sí</td><td style="text-align:center" class="no">No</td></tr>
+        <tr><td>Cerrar cajas</td><td style="text-align:center" class="si">Sí</td><td style="text-align:center" class="no">No</td></tr>
+        <tr><td>Reportes, usuarios, configuración, auditoría y respaldo</td><td style="text-align:center" class="si">Sí</td><td style="text-align:center" class="no">No</td></tr>
+    </tbody>
+</table>
+
+<h1>Política de contraseñas</h1>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:34%"><b>Longitud</b></td><td>Mínimo 10 caracteres (máximo 128).</td></tr>
+        <tr><td><b>Complejidad</b></td><td>Mayúsculas y minúsculas, al menos un número y un símbolo.</td></tr>
+        <tr><td><b>Prohibido</b></td><td>Contener el usuario, nombre, cédula o correo; palabras comunes (password, admin, colombia, 123456…, también con sustituciones como "4dm1n"); repetir un carácter 4 o más veces seguidas; reutilizar la contraseña actual.</td></tr>
+        <tr><td><b>Primer ingreso</b></td><td>Toda contraseña asignada por el administrador (usuario nuevo o restablecido) debe cambiarse en el primer ingreso. El sistema no permite usar ninguna otra pantalla hasta hacerlo.</td></tr>
+        <tr><td><b>Almacenamiento</b></td><td>Nunca se guarda la contraseña: se guarda un resumen irreversible Argon2id. Ni el administrador ni el desarrollador pueden ver las contraseñas.</td></tr>
+        <tr><td><b>Al cambiarla</b></td><td>Se cierran las demás sesiones abiertas del usuario.</td></tr>
+    </tbody>
+</table>
+<div class="consejo"><b>Recomendaciones:</b> usa una frase de varias palabras con símbolos (<code>Cafe.Tinto#Martes19</code>), no la anotes en papel visible, no la uses en otros sitios y cámbiala si sospechas que alguien la conoce.</div>
+
+<h1>Protección de sesiones y del ingreso</h1>
+<table class="tabla">
+    <thead><tr><th style="width:34%">Control</th><th>Funcionamiento</th></tr></thead>
+    <tbody>
+        <tr><td>Bloqueo por intentos</td><td>5 intentos fallidos en 15 minutos bloquean el ingreso de ese usuario desde ese equipo; 10 bloquean al usuario desde cualquier equipo; 20 bloquean al equipo para cualquier usuario. Se registra en la base de datos, así que borrar las cookies no lo evita.</td></tr>
+        <tr><td>Mensaje genérico</td><td>"Usuario o contraseña incorrectos" en todos los casos, con el mismo tiempo de respuesta, para no revelar qué usuarios existen.</td></tr>
+        <tr><td>Inactividad</td><td>La sesión se cierra tras 30 minutos sin uso y como máximo a las 12 horas.</td></tr>
+        <tr><td>Revalidación constante</td><td>En cada pantalla se verifica que el usuario siga activo, con el mismo rol y la misma contraseña. Desactivarlo, cambiarle el rol o la contraseña tiene efecto inmediato en sus sesiones abiertas.</td></tr>
+        <tr><td>Robo de sesión</td><td>Cookie inaccesible a JavaScript (HttpOnly), restringida al sitio (SameSite), cifrada con HTTPS (Secure), identificador nuevo al ingresar y ligado al navegador.</td></tr>
+    </tbody>
+</table>
+
+<h1>Controles técnicos implementados</h1>
+<table class="tabla compacta">
+    <thead><tr><th style="width:28%">Riesgo</th><th>Protección</th></tr></thead>
+    <tbody>
+        <tr><td>Acceso a datos de otro cobrador cambiando la dirección (IDOR)</td><td>Cada consulta verifica que el registro pertenezca a la cartera del usuario.</td></tr>
+        <tr><td>Envío de formularios desde otros sitios (CSRF)</td><td>Token secreto en cada formulario; las acciones que cambian datos solo se aceptan por POST.</td></tr>
+        <tr><td>Inyección SQL</td><td>Consultas preparadas en todo el sistema.</td></tr>
+        <tr><td>Inyección de código en pantallas (XSS)</td><td>Todo dato se escapa al mostrarse y la política CSP solo permite los scripts propios del sistema.</td></tr>
+        <tr><td>Inserción en otro sitio (clickjacking)</td><td>El sistema no se puede mostrar dentro de otras páginas.</td></tr>
+        <tr><td>Fórmulas maliciosas en Excel</td><td>Los textos se guardan como texto literal y nunca se ejecutan.</td></tr>
+        <tr><td>Montos manipulados</td><td>Validación estricta: no se aceptan negativos, decimales, texto ni pagos mayores al saldo.</td></tr>
+        <tr><td>Descarga de archivos internos</td><td>Configuración, código, base de datos, registros, respaldos, pruebas y manuales fuente están bloqueados desde el navegador.</td></tr>
+        <tr><td>Exposición de errores internos</td><td>Con <code>APP_DEBUG=false</code> los errores se registran en el log y el usuario ve un mensaje genérico.</td></tr>
+        <tr><td>Modificación oculta del dinero</td><td>Los pagos nunca se borran: se anulan con motivo; los saldos se recalculan desde los pagos y todo queda auditado.</td></tr>
+        <tr><td>Cobros duplicados al sincronizar</td><td>Cada cobro o gestión de la ruta lleva un código único; si llega dos veces (mala señal, dos pestañas) se registra una sola.</td></tr>
+        <tr><td>Cobros sin conexión manipulados en el celular</td><td>El celular no decide nada: al sincronizar, el servidor vuelve a aplicar todas las reglas (cartera propia, crédito activo, valor ≤ saldo, token CSRF y sesión válida del mismo usuario). Una hora del celular futura o de más de 7 días se reemplaza por la del servidor, y un pago no puede caer en un día con caja ya cerrada.</td></tr>
+    </tbody>
+</table>
+<h2>Datos guardados en los celulares</h2>
+<p>Para trabajar sin internet, cada equipo guarda copias de las pantallas abiertas (con datos de clientes) y, en la ruta, los cobros pendientes por enviar.</p>
+<ul>
+    <li>Las copias de pantallas <b>se borran al cerrar sesión</b>. Los cobros pendientes no se borran, para no perder dinero registrado; solo los ve y los envía el mismo usuario.</li>
+    <li>Nunca se guardan descargas (Excel, respaldos) ni la pantalla de ingreso.</li>
+    <li>Las copias solo se ven <b>en ese equipo</b> y con el navegador abierto en APEX; no dan acceso al sistema: cualquier acción necesita una sesión válida en el servidor.</li>
+</ul>
+<div class="alerta"><b>Límite:</b> desactivar un usuario cierra sus sesiones en el servidor, pero <b>no puede borrar a distancia</b> las copias que ya están en su celular. Por eso: celular con bloqueo de pantalla (PIN o huella), cerrar sesión al terminar la jornada, no usar APEX en equipos compartidos sin cerrar sesión, y no usar modo incógnito ni equipos ajenos.</div>
+
+<h2>Pruebas de seguridad</h2>
+<p>El sistema incluye 93 pruebas automáticas de seguridad (<code>tests/seguridad.php</code>). En la versión 1.3 se superaron las 93, en estas categorías:</p>
+<table class="tabla compacta">
+    <thead><tr><th style="width:44%">Categoría</th><th style="width:12%;text-align:center">Pruebas</th><th>Ejemplos</th></tr></thead>
+    <tbody>
+        <tr><td>Configuración y exposición de información</td><td style="text-align:center">19</td><td>Archivos internos bloqueados, cabeceras de seguridad, cookies, caché</td></tr>
+        <tr><td>Autenticación y sesiones</td><td style="text-align:center">15</td><td>Fuerza bruta, enumeración, fijación de sesión, contraseñas débiles, Argon2id</td></tr>
+        <tr><td>Control de acceso (roles e IDOR)</td><td style="text-align:center">11</td><td>Escalada de privilegios, acceso a carteras ajenas, campos ocultos manipulados</td></tr>
+        <tr><td>Inyección, XSS, CSRF y validación</td><td style="text-align:center">18</td><td>24 variantes de inyección SQL, XSS almacenado y reflejado, montos inválidos</td></tr>
+        <tr><td>Caja, gestiones, renovaciones, documentos, respaldo y manuales</td><td style="text-align:center">28</td><td>Cierres solo por administrador, integridad de renovaciones, IDOR en documentos y manuales</td></tr>
+        <tr><td>Trazabilidad</td><td style="text-align:center">2</td><td>Auditoría activa, sin errores internos expuestos</td></tr>
+    </tbody>
+</table>
+
+<h1>Auditoría</h1>
+<p>Toda acción relevante se registra con usuario, fecha y hora, dirección IP y navegador. Solo los administradores pueden consultarla (<span class="menu">Auditoría</span>) y nadie puede editarla desde el sistema.</p>
+<table class="tabla compacta">
+    <thead><tr><th style="width:30%">Grupo</th><th>Eventos registrados</th></tr></thead>
+    <tbody>
+        <tr><td>Acceso</td><td>Inicio de sesión, ingreso fallido, ingreso bloqueado, cierre de sesión, sesión expirada o invalidada, acceso denegado, cambio de contraseña</td></tr>
+        <tr><td>Usuarios</td><td>Creado, editado (incluye cambios de rol, estado y contraseña restablecida), activado/desactivado, eliminado</td></tr>
+        <tr><td>Clientes</td><td>Creado, editado, eliminado, asignación y traslado de cartera</td></tr>
+        <tr><td>Créditos y pagos</td><td>Crédito creado, renovado y anulado; pago registrado y anulado (con motivo)</td></tr>
+        <tr><td>Cobro y caja</td><td>Gestión de cobro, gasto registrado y anulado, cierre de caja (con diferencia), orden de ruta actualizado. Los cobros y gestiones que llegaron sin conexión se marcan "sin conexión" con la hora en que se sincronizaron.</td></tr>
+        <tr><td>Administración</td><td>Configuración modificada, exportación de reportes, respaldo de datos</td></tr>
+    </tbody>
+</table>
+<h2>Revisión recomendada</h2>
+<ul class="checklist">
+    <li><b>Diaria:</b> el resumen de las últimas 24 horas (ingresos fallidos, bloqueos, accesos denegados).</li>
+    <li><b>Semanal:</b> todos los <b>pagos anulados</b> y los <b>cierres con faltante</b>, verificando que el motivo sea razonable. También los pagos <b>sin conexión</b> sincronizados mucho después del cobro.</li>
+    <li><b>Mensual:</b> las <b>exportaciones</b> de datos y los cambios de usuarios y configuración.</li>
+</ul>
+<div class="alerta"><b>Señales de alerta:</b> muchas anulaciones de un mismo usuario, pagos anulados poco después de registrados, ingresos fallidos repetidos, ingresos en horarios inusuales, exportaciones de clientes no solicitadas.</div>
+
+<h1>Respaldos</h1>
+<ul>
+    <li><b>Frecuencia:</b> respaldo automático diario (ver Manual de instalación) más uno manual antes de cualquier cambio importante.</li>
+    <li><b>Regla 3-2-1:</b> 3 copias, en 2 medios distintos, 1 fuera de la oficina.</li>
+    <li><b>Retención:</b> respaldos diarios de 30 días y uno mensual por al menos un año.</li>
+    <li><b>Protección:</b> los respaldos contienen datos personales y resúmenes de contraseñas. Guárdalos en carpetas con acceso restringido o comprimidos con contraseña.</li>
+    <li><b>Prueba:</b> restaura un respaldo una vez al mes en una base de prueba.</li>
+</ul>
+
+<h1>Respuesta a incidentes</h1>
+<table class="tabla">
+    <thead><tr><th style="width:30%">Situación</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+        <tr><td>Un cobrador perdió el celular o se lo robaron</td><td>1. Desactivar su usuario o asignarle una contraseña nueva (sus sesiones se cierran al instante). 2. Revisar en la auditoría su actividad reciente. 3. Preguntarle qué cobró sin señal: lo pendiente en ese celular no llegará; registrarlo en oficina. 4. Tener en cuenta que las copias de pantallas en ese celular pueden mostrar datos de sus clientes; si el equipo tenía cuenta de Google o Apple, borrarlo a distancia. 5. Reactivarlo con contraseña temporal cuando tenga equipo nuevo.</td></tr>
+        <tr><td>Sospecha de que alguien conoce una contraseña</td><td>Cambiarla de inmediato y revisar la auditoría de ese usuario.</td></tr>
+        <tr><td>Muchos ingresos fallidos o bloqueos</td><td>Identificar el usuario y la IP en la auditoría. Si no fue el usuario legítimo, cambiar su contraseña y avisar al soporte técnico.</td></tr>
+        <tr><td>Pagos anulados o datos modificados sin explicación</td><td>Revisar la auditoría (quién, cuándo, motivo). Si fue indebido, desactivar el usuario, restablecer las contraseñas de los administradores y, si es necesario, comparar con un respaldo anterior.</td></tr>
+        <tr><td>Pérdida o daño del equipo servidor</td><td>Instalar APEX en otro equipo (Manual de instalación) y restaurar el último respaldo. Cambiar todas las contraseñas.</td></tr>
+        <tr><td>Sospecha de acceso no autorizado al servidor</td><td>Desconectarlo de la red, sacar un respaldo, cambiar las contraseñas de Windows, de MySQL y de todos los administradores, y revisar con soporte técnico.</td></tr>
+    </tbody>
+</table>
+<p>Documenta cada incidente: fecha, qué ocurrió, cómo se detectó, qué se hizo y qué se cambió para que no se repita.</p>
+
+<h1>Tratamiento de datos personales</h1>
+<p>APEX almacena datos personales de clientes (identificación, contacto, dirección, ocupación, referencias) e información financiera. En Colombia su tratamiento está regulado por la <b>Ley 1581 de 2012</b> y sus decretos reglamentarios. Estas son recomendaciones generales; consulta con un asesor legal para tu caso particular.</p>
+<ul>
+    <li><b>Autorización:</b> obtén la autorización previa, expresa e informada del cliente para el tratamiento de sus datos, y consérvala.</li>
+    <li><b>Finalidad:</b> usa los datos solo para la gestión del crédito y su cobro, como se le informó al cliente.</li>
+    <li><b>Referencias personales:</b> informa al cliente que registras los datos de su referencia y úsalos solo para su localización.</li>
+    <li><b>Acceso restringido:</b> cada cobrador ve únicamente a sus clientes; no exportes ni compartas listados sin necesidad.</li>
+    <li><b>Derechos del titular:</b> atiende las solicitudes de consulta, actualización y rectificación (los datos se editan en la ficha del cliente).</li>
+    <li><b>Cobranza respetuosa:</b> los mensajes de WhatsApp y las visitas deben respetar la dignidad del cliente; no compartas su deuda con terceros.</li>
+    <li><b>Seguridad:</b> aplica las políticas de este manual (contraseñas, respaldos protegidos, desactivación oportuna de usuarios).</li>
+</ul>
+
+<h1>Recomendaciones para el servidor</h1>
+<ul class="checklist">
+    <li><code>APP_DEBUG=false</code>.</li>
+    <li>Usuario de MySQL propio con contraseña; contraseña también para <code>root</code>.</li>
+    <li>HTTPS si el sistema se publica en internet (también es obligatorio para trabajar sin conexión).</li>
+    <li><code>ServerTokens Prod</code> y <code>ServerSignature Off</code> en Apache.</li>
+    <li>Windows actualizado, antivirus activo y cuenta de Windows con contraseña.</li>
+    <li>phpMyAdmin accesible solo desde el propio equipo.</li>
+    <li>Ejecutar <code>tests/verificar_produccion.php</code> cada mes.</li>
+</ul>
+<p class="version" style="margin-top:8mm">APEX · Manual de seguridad · Versión 1.3 · © APEX · Desarrollado por Ing. Antony Pérez</p>
+</main>
+<script src="manual.js"></script>
+</body>
+</html>

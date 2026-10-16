@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>APEX · Manual del cobrador</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<main>
+<section class="portada">
+    <div class="contenido">
+        <div class="marca">A</div>
+        <div class="producto">APEX</div>
+        <h1>Manual del cobrador</h1>
+        <div class="subtitulo">Cómo usar APEX desde el celular: tu ruta del día y su orden de visita, cobrar, registrar cuando un cliente no paga, la hoja de ruta, trabajar sin internet, tus gastos y la entrega del dinero.</div>
+        <div class="publico">Dirigido a: cobradores</div>
+    </div>
+    <div class="datos">
+        <div><strong>APEX · Sistema de control de cobros</strong>Versión 1.3 · <span data-fecha></span></div>
+        <div style="text-align:right"><strong>Desarrollado por</strong>Ing. Antony Pérez</div>
+    </div>
+</section>
+
+<nav class="indice"><h2 data-sin-indice>Contenido</h2><div id="indice"></div></nav>
+
+<h1>Bienvenido</h1>
+<p class="lead">Con APEX llevas en tu celular toda tu ruta de cobro: a quién visitar hoy, cuánto debe cada cliente y cuánto has cobrado. Cada pago que registras queda guardado al instante y genera un recibo para el cliente.</p>
+<h2>Lo que puedes hacer</h2>
+<div class="tarjetas">
+    <div class="tarjeta"><h4>Tu ruta del día</h4><p>Ver los clientes que debes visitar, lo que deben y lo que tienen atrasado.</p></div>
+    <div class="tarjeta"><h4>Cobrar</h4><p>Registrar pagos y enviar el recibo por WhatsApp.</p></div>
+    <div class="tarjeta"><h4>Cuando no pagan</h4><p>Dejar registrado por qué no pagó o la promesa de pago.</p></div>
+    <div class="tarjeta"><h4>Tu caja</h4><p>Anotar tus gastos de ruta y saber cuánto debes entregar.</p></div>
+    <div class="tarjeta"><h4>Ordenar tu ruta</h4><p>Poner los clientes en el orden en que los visitas, para no confundirte.</p></div>
+    <div class="tarjeta"><h4>Hoja de ruta</h4><p>Un PDF con lo que debes recoger hoy, para tenerlo a mano o imprimirlo.</p></div>
+    <div class="tarjeta"><h4>Sin internet</h4><p>Seguir cobrando sin señal: todo se guarda en el celular y se envía solo al volver la conexión.</p></div>
+</div>
+<h2>Lo que no puedes hacer</h2>
+<p>Para proteger el dinero y la información, como cobrador <b>no puedes</b>: crear créditos, anular pagos, cambiar pagos de fecha, ver clientes de otros cobradores, ni ver reportes. Si te equivocaste en un pago, avisa de inmediato al administrador.</p>
+<h2>Antes de salir a la ruta</h2>
+<ul class="checklist">
+    <li>Celular con batería cargada y datos móviles o wifi.</li>
+    <li>Tu usuario y contraseña (son personales: no los compartas con nadie).</li>
+    <li>Revisar tu ruta y las promesas de pago del día.</li>
+    <li><b>Abrir la Ruta de cobro con señal</b> (wifi o datos) antes de salir: así queda guardada en el celular por si te quedas sin internet.</li>
+    <li>Si quieres, descargar la <b>Hoja de ruta (PDF)</b> del día.</li>
+    <li>Revisar que no tengas nada <b>pendiente por enviar</b> de días anteriores (ver capítulo 8).</li>
+</ul>
+
+<h1>Ingresar al sistema</h1>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_login.png" alt="Ingreso"><figcaption><b>Figura 2.1.</b> Pantalla de ingreso.</figcaption></figure>
+    <div>
+        <ol class="pasos">
+            <li>Abre el navegador del celular (Chrome) y entra a la dirección que te dio el administrador.</li>
+            <li>Escribe tu <b>usuario</b> y tu <b>contraseña</b>.</li>
+            <li>Toca <span class="boton">Entrar →</span>.</li>
+        </ol>
+        <div class="consejo"><b>Instala APEX en tu celular:</b> en Chrome toca ⋮ → <b>Agregar a la pantalla principal</b> (o <b>Instalar aplicación</b>). Así lo abres como una aplicación, con su ícono, y funciona aunque no tengas señal.</div>
+        <div class="alerta">Si te equivocas 5 veces en la contraseña, el ingreso se bloquea 15 minutos. Si la olvidaste, pide al administrador una nueva.</div>
+    </div>
+</div>
+<h2>Tu primera vez: cambiar la contraseña</h2>
+<p>La primera vez el sistema te pide crear tu propia contraseña. Debe tener:</p>
+<ul>
+    <li>Mínimo <b>10 caracteres</b>, con <b>mayúsculas y minúsculas</b>, al menos un <b>número</b> y un <b>símbolo</b> (# $ % . ! ?).</li>
+    <li>No puede tener tu nombre, tu usuario ni tu cédula.</li>
+</ul>
+<p>Mientras escribes, cada requisito se marca en verde cuando se cumple. Ejemplo de buena contraseña: <code>Moto.Azul#Ruta24</code>.</p>
+<div class="importante"><b>Nunca le des tu contraseña a nadie</b>, ni siquiera a otro cobrador. Todo lo que se haga con tu usuario queda registrado a tu nombre.</div>
+
+<h1>El menú</h1>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_menu.png" alt="Menú"><figcaption><b>Figura 3.1.</b> Menú del cobrador.</figcaption></figure>
+    <div>
+        <p>Toca el botón <b>☰</b> (arriba a la izquierda) para abrir el menú:</p>
+        <table class="tabla">
+            <tbody>
+                <tr><td style="width:36%"><b>Panel</b></td><td>Resumen de tu cartera y tu recaudo.</td></tr>
+                <tr><td><b>Ruta de cobro</b></td><td>Los clientes a visitar hoy. Es tu pantalla principal.</td></tr>
+                <tr><td><b>Clientes</b></td><td>Todos tus clientes.</td></tr>
+                <tr><td><b>Créditos</b></td><td>Los créditos de tus clientes.</td></tr>
+                <tr><td><b>Pagos</b></td><td>Los pagos que has recibido.</td></tr>
+                <tr><td><b>Caja</b></td><td>Tus gastos y el dinero que debes entregar.</td></tr>
+                <tr><td><b>Mi cartera</b></td><td>Tus indicadores y la lista de tus clientes.</td></tr>
+                <tr><td><b>Ayuda</b></td><td>Este manual y la guía rápida, para consultarlos desde el celular.</td></tr>
+            </tbody>
+        </table>
+        <p>Abajo del menú está tu nombre (toca para ir a <b>Mi perfil</b>) y el botón para <b>cerrar sesión</b>.</p>
+    </div>
+</div>
+
+<h1>Tu ruta del día</h1>
+<p>Al ingresar llegas directo a la <b>Ruta de cobro</b>. Arriba ves el resumen y abajo una tarjeta por cada cliente que debes visitar.</p>
+<div class="fila-movil">
+    <figure class="movil"><img src="../img/movil_ruta.png" alt="Ruta"><figcaption><b>Figura 4.1.</b> Resumen de la ruta.</figcaption></figure>
+    <figure class="movil"><img src="../img/movil_ruta_completa.png" alt="Ruta completa" style="max-height:105mm;object-fit:cover;object-position:top"><figcaption><b>Figura 4.2.</b> Tarjetas de los clientes.</figcaption></figure>
+    <div>
+        <h4>Resumen</h4>
+        <ul>
+            <li><b>Clientes a visitar</b> y cuántos ya pagaron.</li>
+            <li><b>Pendiente por cobrar</b> (incluye lo atrasado).</li>
+            <li><b>Cobrado hoy</b>.</li>
+            <li><b>Meta diaria</b> y tu avance.</li>
+            <li><b>Efectivo en tu poder</b>.</li>
+            <li><b>Promesas de pago</b> de hoy.</li>
+        </ul>
+    </div>
+</div>
+<h2>Cómo leer la tarjeta de un cliente</h2>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:32%"><b>Número (1, 2, 3…)</b></td><td>El orden de visita: en qué turno pasas por ese cliente.</td></tr>
+        <tr><td><b>Nombre y dirección</b></td><td>A quién visitar y dónde. Toca el nombre para ver el crédito completo.</td></tr>
+        <tr><td><b>Cuota</b></td><td>Valor de cada cuota y si es diaria, semanal, quincenal o mensual.</td></tr>
+        <tr><td><b>Pendiente a la fecha</b></td><td>Lo que el cliente debería haber pagado hasta hoy.</td></tr>
+        <tr><td><b>Atrasado (en rojo)</b></td><td>Cuotas de días anteriores que no pagó. La tarjeta tiene un borde rojo.</td></tr>
+        <tr><td><b>Saldo total</b></td><td>Todo lo que le falta pagar del crédito.</td></tr>
+        <tr><td><b>Tarjeta verde "Pagó"</b></td><td>El cliente ya pagó hoy.</td></tr>
+        <tr><td><b>Prometió pagar</b> (recuadro azul)</td><td>El cliente se comprometió a pagar en esa fecha.</td></tr>
+    </tbody>
+</table>
+<p>Los botones de la tarjeta: 📞 <b>llamar</b>, <b>WhatsApp</b> (abre un recordatorio con el valor de la cuota), <span class="boton verde">Cobrar</span> y <span class="boton rojo">✕ No pagó</span>.</p>
+<div class="consejo">Usa el buscador <b>"Buscar en la ruta"</b> para encontrar rápido a un cliente por su nombre o barrio.</div>
+
+<h2>Ordenar tu ruta (orden de visita)</h2>
+<p>Los clientes aparecen en el <b>orden en que tú los visitas</b>, no por nombre. Tú decides ese orden según tu recorrido, y el sistema lo recuerda: aunque cierres sesión o pasen los días, la ruta sale siempre igual.</p>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_ruta_organizar.png" alt="Organizar la ruta"><figcaption><b>Figura 4.3.</b> Organizando el orden de visita.</figcaption></figure>
+    <div>
+        <ol class="pasos">
+            <li>En la ruta, en el recuadro <b>Orden de visita</b>, toca <span class="boton">Organizar ruta</span>.</li>
+            <li>Las tarjetas quedan con borde punteado. <b>Mantén presionada</b> la tarjeta de un cliente un momento y <b>arrástrala</b> a su lugar. También puedes usar las flechas <b>↑</b> y <b>↓</b> de cada tarjeta.</li>
+            <li>Los números se actualizan mientras mueves.</li>
+            <li>Toca <span class="boton verde">Guardar orden</span>. Si te arrepientes, toca <span class="boton claro">Cancelar</span> y todo queda como estaba.</li>
+        </ol>
+        <div class="nota"><b>Clientes nuevos:</b> cuando te asignan un cliente nuevo aparece <b>al final</b> de tu ruta, sin desordenar a los demás. Luego puedes moverlo a donde corresponda.</div>
+        <div class="consejo">Mientras organizas, los botones de cobrar y WhatsApp quedan apagados para que no los toques por error.</div>
+        <div class="nota">Si no tienes señal al guardar, el orden queda guardado en el celular y se envía solo cuando vuelva la conexión.</div>
+    </div>
+</div>
+
+<h1>Cobrar a un cliente</h1>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_cobrar.png" alt="Cobrar"><figcaption><b>Figura 5.1.</b> Registrar un pago.</figcaption></figure>
+    <div>
+        <ol class="pasos">
+            <li>Toca <span class="boton verde">Cobrar</span> en la tarjeta del cliente.</li>
+            <li>Revisa el <b>saldo pendiente</b> que aparece arriba.</li>
+            <li>En <b>Valor recibido</b> ya viene lo que debe a la fecha. Si te pagó otro valor, bórralo y escribe lo que recibiste, o usa los botones rápidos.</li>
+            <li>Elige el <b>método</b>: Efectivo, Nequi, Daviplata, Transferencia u Otro.</li>
+            <li>Si quieres, escribe una nota (por ejemplo "pagó adelantado").</li>
+            <li>Toca <span class="boton">Registrar pago</span>.</li>
+        </ol>
+        <div class="nota">El pago se abona primero a las cuotas más viejas. Puedes recibir cualquier valor, pero nunca más que el saldo.</div>
+        <div class="alerta"><b>Escribe el valor sin centavos</b>: 25000 o 25.000. El sistema no acepta valores con decimales, negativos o con letras.</div>
+    </div>
+</div>
+<h2>Entregar el recibo</h2>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_recibo.png" alt="Recibo"><figcaption><b>Figura 5.2.</b> Recibo de pago.</figcaption></figure>
+    <div>
+        <p>Después de registrar el pago aparece un aviso verde con el botón <span class="boton verde">Ver recibo</span>. En el recibo puedes:</p>
+        <ul>
+            <li><b>Enviar por WhatsApp</b>: se abre el chat del cliente con el recibo escrito (número, valor, fecha y saldo).</li>
+            <li><b>Imprimir</b>, si tienes una impresora portátil.</li>
+        </ul>
+        <div class="consejo">Envía siempre el recibo por WhatsApp. Le da tranquilidad al cliente y te protege a ti ante cualquier reclamo.</div>
+        <p>La tarjeta del cliente queda en verde con el valor que pagó. Si te da otro abono el mismo día, toca <span class="boton claro">Otro abono</span>.</p>
+    </div>
+</div>
+<h2>Si te equivocaste en un pago</h2>
+<p>No registres otro pago para "corregir". Avisa de inmediato al administrador: él puede anular el pago equivocado y tú registras el correcto.</p>
+
+<h1>Cuando el cliente no paga</h1>
+<p>Si visitas o llamas a un cliente y no paga, <b>regístralo siempre</b>. Así la oficina sabe que sí hiciste la visita y qué pasó.</p>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_no_pago.png" alt="No pagó"><figcaption><b>Figura 6.1.</b> Registrar que no pagó.</figcaption></figure>
+    <div>
+        <ol class="pasos">
+            <li>Toca <span class="boton rojo">✕ No pagó</span> en la tarjeta del cliente.</li>
+            <li>Indica cómo lo contactaste: <b>Visita</b>, <b>Llamada</b> o <b>WhatsApp</b>.</li>
+            <li>Elige qué pasó: no estaba / cerrado, sin dinero hoy, se niega a pagar, dirección errada / se mudó, u otro.</li>
+            <li>Si el cliente <b>promete pagar</b>, elige <b>Promesa de pago</b> e indica la fecha y el valor prometido.</li>
+            <li>Escribe una observación y toca <span class="boton">Guardar gestión</span>.</li>
+        </ol>
+        <div class="nota"><b>Las promesas se revisan solas:</b> si el cliente paga lo prometido a más tardar en la fecha, el sistema marca la promesa como <b>cumplida</b>. Si no, queda como <b>incumplida</b>.</div>
+    </div>
+</div>
+
+<h1>La hoja de ruta (PDF)</h1>
+<p>La hoja de ruta es un documento con <b>todo lo que debes recoger en el día</b>, en tu orden de visita. Sirve para tenerla a mano, imprimirla o guardarla en el celular por si te quedas sin internet.</p>
+<figure><img src="../img/hoja_ruta.png" alt="Hoja de ruta"><figcaption><b>Figura 7.1.</b> Hoja de ruta del día.</figcaption></figure>
+<ol class="pasos">
+    <li>En la ruta toca <span class="boton claro">Hoja de ruta (PDF)</span>. Se abre en una pestaña nueva.</li>
+    <li>Toca <span class="boton">Imprimir / Guardar PDF</span>. En el celular elige <b>Guardar como PDF</b>; en el computador, tu impresora o "Guardar como PDF".</li>
+</ol>
+<p>La hoja trae:</p>
+<ul>
+    <li>Arriba: cuántos clientes visitar, cuánto hay por cobrar, cuánto de eso está atrasado y lo que ya cobraste.</li>
+    <li>Una fila por cliente con su número de visita, nombre, cédula, código del crédito, dirección, teléfono, cuota, atrasado, <b>lo que debes cobrar</b> y saldo.</li>
+    <li>Espacios en blanco para anotar a mano <b>lo recibido</b> y una <b>observación</b>, y una casilla ✓ para marcar las visitas hechas. Los clientes que ya pagaron aparecen con "Pagó $…".</li>
+    <li>Al final, los totales y las promesas de pago del día.</li>
+</ul>
+<div class="importante">Lo que anotes a mano en la hoja <b>no queda en el sistema</b>. Si cobraste sin el celular, registra esos pagos en APEX en cuanto puedas, para que el cliente reciba su recibo y tu caja cuadre.</div>
+
+<h1>Trabajar sin internet</h1>
+<p class="lead">Si te quedas sin señal en la mitad de la ruta, <b>sigue trabajando normal</b>. APEX guarda en tu celular lo que registres y lo envía solo, en el mismo orden, cuando vuelva la conexión.</p>
+<h2>Qué puedes hacer sin internet</h2>
+<table class="tabla">
+    <thead><tr><th style="width:36%">Acción</th><th>Sin internet</th></tr></thead>
+    <tbody>
+        <tr><td><b>Ver tu ruta</b> y la hoja de ruta</td><td>Sí. Ves la última copia guardada.</td></tr>
+        <tr><td><b>Cobrar</b> desde la ruta</td><td>Sí. Se guarda en el celular y se envía después.</td></tr>
+        <tr><td><b>No pagó / promesa</b> desde la ruta</td><td>Sí. Se guarda en el celular y se envía después.</td></tr>
+        <tr><td><b>Ordenar tu ruta</b></td><td>Sí. Se guarda en el celular y se envía después.</td></tr>
+        <tr><td>Consultar clientes, créditos, pagos, caja, tu cartera y el panel</td><td>Sí, las pantallas que hayas abierto antes con señal (ver 8.7).</td></tr>
+        <tr><td>Crear clientes, registrar gastos, cerrar sesión y lo demás</td><td>No. Necesitan internet.</td></tr>
+    </tbody>
+</table>
+
+<h2>Prepárate antes de salir</h2>
+<ul class="checklist">
+    <li>Abre la <b>Ruta de cobro</b> con señal (wifi o datos). En ese momento el celular guarda tu ruta, la hoja de ruta y la ficha de cada cliente del día.</li>
+    <li>Instala APEX en el celular (capítulo 2): así lo abres sin señal desde su ícono.</li>
+    <li>No borres los datos del navegador mientras tengas cobros pendientes por enviar.</li>
+</ul>
+<div class="nota">El celular necesita haber abierto la ruta con internet al menos una vez ese día. Si no lo hiciste, sin señal verás la copia de la última vez que la abriste.</div>
+
+<h2>Cómo se ve sin conexión</h2>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_sin_conexion.png" alt="Ruta sin conexión"><figcaption><b>Figura 8.1.</b> La ruta sin conexión.</figcaption></figure>
+    <div>
+        <ul>
+            <li>Arriba aparece una franja amarilla: <b>"Sin conexión · copia guardada el …"</b>. Indica de qué hora es la información que estás viendo.</li>
+            <li>En la barra superior aparece <b>"Sin conexión · 2"</b>: el número es cuántas cosas tienes guardadas en el celular, sin enviar.</li>
+            <li>Debajo, el aviso <b>"Estás sin conexión"</b> te recuerda que lo que registres queda guardado.</li>
+        </ul>
+        <figure class="pequena"><img src="../img/movil_indicador_conexion.png" alt="Indicador"><figcaption><b>Figura 8.2.</b> Indicador en la barra superior.</figcaption></figure>
+    </div>
+</div>
+
+<h2>Cobrar sin internet</h2>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_guardado_celular.png" alt="Guardado en el celular"><figcaption><b>Figura 8.3.</b> El cobro quedó guardado en el celular.</figcaption></figure>
+    <div>
+        <ol class="pasos">
+            <li>Cobra igual que siempre: <span class="boton verde">Cobrar</span>, escribe el valor y toca <span class="boton">Registrar pago</span>.</li>
+            <li>Aparece el aviso amarillo <b>"Guardado en el celular"</b>.</li>
+            <li>La tarjeta del cliente se pone amarilla y dice <b>"Cobró $… · guardado en el celular, sin enviar"</b>.</li>
+        </ol>
+        <p>Lo mismo pasa con <span class="boton rojo">✕ No pagó</span>.</p>
+        <div class="alerta"><b>Sin internet no hay recibo todavía.</b> El recibo (con su número RC-…) se crea cuando el cobro llega al sistema. Dile al cliente que se lo envías por WhatsApp cuando vuelva la señal, o anótalo en la hoja de ruta.</div>
+        <div class="nota">Aunque la señal esté muy débil y el envío no responda, el cobro también se guarda en el celular. No lo vuelvas a registrar: el sistema nunca lo cuenta dos veces.</div>
+    </div>
+</div>
+<figure class="media"><img src="../img/movil_tarjeta_pendiente.png" alt="Tarjeta pendiente"><figcaption><b>Figura 8.4.</b> Tarjeta de un cliente con un cobro guardado sin enviar.</figcaption></figure>
+
+<h2>Lo que tienes guardado sin enviar</h2>
+<figure class="media"><img src="../img/movil_pendientes.png" alt="Pendientes por enviar"><figcaption><b>Figura 8.5.</b> Recuadro "Guardado en este celular, por enviar".</figcaption></figure>
+<p>En la ruta aparece el recuadro <b>"Guardado en este celular, por enviar"</b> con cada cobro, gestión u orden de ruta guardado y la hora en que lo registraste.</p>
+<ul>
+    <li><span class="boton claro">Enviar ahora</span>: lo intenta enviar de inmediato (si hay señal).</li>
+    <li><b>🗑 Descartar</b>: borra esa operación del celular y <b>no llegará al sistema</b>. Úsalo solo si te equivocaste. Si descartas un cobro que sí recibiste, debes registrarlo de nuevo.</li>
+</ul>
+
+<h2>Cuando vuelve la señal</h2>
+<figure class="media"><img src="../img/movil_sincronizado.png" alt="Sincronizado"><figcaption><b>Figura 8.6.</b> Aviso de envío completado.</figcaption></figure>
+<p><b>No tienes que hacer nada.</b> Apenas el celular recupera internet (y APEX está abierto), envía todo en el orden en que lo registraste. Aparece el aviso verde <b>"Sincronizado"</b> y la ruta se actualiza con los datos reales: la tarjeta queda en verde con "Pagó" y el recibo ya existe en <span class="menu">Pagos</span>.</p>
+<ul>
+    <li>El pago queda con <b>la hora en que cobraste</b>, no la hora en que se envió, y con la nota "Registrado sin conexión".</li>
+    <li>Si cerraste APEX sin señal, lo guardado se envía la próxima vez que lo abras con internet.</li>
+    <li>Si mientras estabas sin señal se cerró tu sesión, la barra dice <b>"Ingresa para enviar N"</b>: vuelve a ingresar con <b>tu</b> usuario y se envía solo. No se pierde nada.</li>
+</ul>
+<div class="alerta"><b>Si algo no se pudo enviar</b>, la barra dice <b>"N por revisar"</b> y en el recuadro aparece en rojo el motivo. Por ejemplo, "El valor supera el saldo pendiente" si la oficina registró un pago de ese cliente mientras estabas sin señal. Toca <span class="boton claro">Reintentar</span> si ya se corrigió, o avisa al administrador.</div>
+
+<h2>Consultar otras pantallas sin internet</h2>
+<div class="fila-movil">
+    <figure class="movil"><img src="../img/movil_copia_guardada.png" alt="Copia guardada"><figcaption><b>Figura 8.7.</b> Clientes, copia guardada.</figcaption></figure>
+    <figure class="movil"><img src="../img/movil_sin_copia.png" alt="Sin copia"><figcaption><b>Figura 8.8.</b> Pantalla sin copia guardada.</figcaption></figure>
+    <div>
+        <p>Cada pantalla que abres con señal queda guardada en el celular. Además, cada vez que abres la ruta con señal se guardan tu panel, clientes, créditos, pagos, caja, tu cartera y la ficha de cada cliente del día.</p>
+        <p>Sin señal esas pantallas se abren con la franja amarilla <b>"copia guardada"</b>: los datos son de esa hora y pueden haber cambiado.</p>
+        <p>Si abres una pantalla que nunca abriste con señal, aparece <b>"Sin conexión a internet"</b> con la lista de las pantallas que sí tienes guardadas.</p>
+    </div>
+</div>
+<div class="fila-movil dos">
+    <figure class="pequena"><img src="../img/movil_necesita_internet.png" alt="Necesita internet"><figcaption><b>Figura 8.9.</b> Acción que necesita internet.</figcaption></figure>
+    <div><p>Si sin señal tocas algo que necesita internet (por ejemplo registrar un gasto o crear un cliente), aparece el aviso <b>"Necesita internet"</b>. Lo que escribiste sigue en el formulario: espera la señal y vuelve a intentarlo.</p>
+    <p>Los cobros sin internet se hacen <b>desde la Ruta de cobro</b>, no desde la ficha del crédito.</p></div>
+</div>
+<div class="importante"><b>Antes de entregar el dinero</b> revisa que la barra superior no diga "por enviar" ni "por revisar". Si tienes cobros guardados sin enviar, tu caja en el sistema no cuadrará con el efectivo que entregas.</div>
+
+<h1>Registrar un cliente nuevo</h1>
+<ol class="pasos">
+    <li>Toca el botón <b>👤+</b> de la barra superior (o <span class="menu">Clientes</span> → <span class="boton">Nuevo cliente</span>).</li>
+    <li>Llena los datos: <b>cédula, nombres, apellidos, teléfono principal y dirección</b> son obligatorios. Agrega el segundo teléfono, barrio, negocio y una <b>referencia personal</b>.</li>
+    <li>En <b>Observaciones</b> anota lo que sirva para cobrar (horario, punto de referencia).</li>
+    <li>Toca <span class="boton">Registrar cliente</span>. El cliente queda automáticamente en tu cartera.</li>
+</ol>
+<div class="nota">El crédito lo crea el administrador. Avísale cuando registres un cliente nuevo para que le asigne su préstamo.</div>
+
+<h1>Tus clientes y tu cartera</h1>
+<div class="fila-movil">
+    <figure class="movil"><img src="../img/movil_clientes.png" alt="Clientes"><figcaption><b>Figura 10.1.</b> Mis clientes.</figcaption></figure>
+    <figure class="movil"><img src="../img/movil_panel.png" alt="Panel"><figcaption><b>Figura 10.2.</b> Mi panel.</figcaption></figure>
+    <div>
+        <p>En <span class="menu">Clientes</span> ves solo tus clientes, con su calificación, saldo y si están al día o en mora. Puedes buscarlos por nombre, cédula, teléfono o barrio.</p>
+        <p>La <b>calificación</b> (A, B, C, D) indica qué tan cumplido es el cliente: A es excelente y D es riesgoso.</p>
+        <p>En <span class="menu">Mi cartera</span> ves cuántos clientes tienes, el dinero en tu cartera, lo vencido, tu recaudo y la gráfica de los últimos 14 días.</p>
+    </div>
+</div>
+
+<h1>Tu caja: gastos y entrega del dinero</h1>
+<div class="fila-movil dos">
+    <figure class="movil"><img src="../img/movil_caja.png" alt="Caja" style="max-height:120mm;object-fit:cover;object-position:top"><figcaption><b>Figura 11.1.</b> Mi caja.</figcaption></figure>
+    <div>
+        <h3>Registrar un gasto de ruta</h3>
+        <ol class="pasos">
+            <li>Entra a <span class="menu">Caja</span> (o toca <b>Gastos / caja</b> en la ruta).</li>
+            <li>Elige el concepto: transporte / gasolina, alimentación, papelería, recarga u otro.</li>
+            <li>Escribe el valor y un detalle, y toca <span class="boton" style="background:#f59e0b;color:#111">Registrar gasto</span>.</li>
+        </ol>
+        <p>Solo puedes registrar gastos del día de hoy. Si te equivocas puedes anularlo el mismo día, antes de que cierren tu caja.</p>
+    </div>
+</div>
+<h2>¿Cuánto debo entregar?</h2>
+<div class="formula">Debes entregar = Efectivo que cobraste hoy − Tus gastos de hoy<small>Lo que te pagaron por Nequi, Daviplata o transferencia no se entrega: llega directo a la cuenta de la empresa.</small></div>
+<ol class="pasos">
+    <li>Al terminar la ruta, revisa en <span class="menu">Caja</span> el valor <b>Debes entregar</b>.</li>
+    <li>Verifica que no tengas nada <b>por enviar</b> en el celular (capítulo 8). Si hay, conéctate a internet y espera el aviso "Sincronizado".</li>
+    <li>Cuenta el dinero y entrégalo al administrador.</li>
+    <li>El administrador registra el cierre. Si falta dinero queda como <b>faltante a tu cargo</b> en tu <b>efectivo en tu poder</b>.</li>
+</ol>
+<div class="importante"><b>Cuida el dinero.</b> El sistema compara lo que cobraste con lo que entregas. Cualquier diferencia queda registrada a tu nombre.</div>
+
+<h1>Consejos para una buena ruta</h1>
+<ul>
+    <li>Registra cada pago <b>en el momento</b> en que lo recibes, no al final del día.</li>
+    <li>Envía siempre el recibo por WhatsApp.</li>
+    <li>Registra cada visita en la que el cliente no pagó, con el motivo real.</li>
+    <li>Atiende primero a los clientes con <b>borde rojo</b> (atrasados) y a los que <b>prometieron pagar hoy</b>.</li>
+    <li>Revisa tu <b>avance de la meta diaria</b> a mitad de la jornada.</li>
+    <li>Organiza tu <b>orden de visita</b> según tu recorrido real; cuando te llegue un cliente nuevo, ubícalo en su lugar.</li>
+    <li>Abre la ruta con señal antes de salir y, si estuviste sin internet, conéctate antes de entregar el dinero.</li>
+    <li>Cierra la sesión si le prestas el celular a alguien. Si pierdes el celular, avisa de inmediato al administrador para que bloquee tu usuario.</li>
+</ul>
+
+<h1>Preguntas frecuentes</h1>
+<h3>No me aparece un cliente</h3>
+<p>Seguramente está asignado a otro cobrador. Pregunta al administrador.</p>
+<h3>El sistema me sacó y debo volver a ingresar</h3>
+<p>Por seguridad la sesión se cierra después de 30 minutos sin usar el sistema. Vuelve a ingresar. Si tenías cobros guardados sin enviar, no se pierden: se envían solos cuando ingresas.</p>
+<h3>Me quedé sin señal en la mitad de la ruta</h3>
+<p>Sigue cobrando desde la Ruta de cobro. Todo queda guardado en el celular y se envía solo cuando vuelva la señal (capítulo 8).</p>
+<h3>¿Se puede registrar un cobro dos veces por la mala señal?</h3>
+<p>No. Cada cobro lleva un código único: aunque llegue dos veces al sistema, se guarda una sola vez. Lo que no debes hacer es <b>registrarlo de nuevo a mano</b>; revisa primero el recuadro "por enviar".</p>
+<h3>La barra dice "Ingresa para enviar"</h3>
+<p>Tu sesión se cerró mientras estabas sin señal. Ingresa con tu usuario y lo guardado se envía solo.</p>
+<h3>Un cobro quedó "por revisar"</h3>
+<p>El sistema no lo aceptó; el motivo aparece en rojo en el recuadro de la ruta. No lo descartes sin hablar con el administrador.</p>
+<h3>Voy a cambiar de celular o a borrar los datos del navegador</h3>
+<p>Antes, conéctate a internet y espera a que no quede nada por enviar. Lo guardado vive solo en ese celular: si borras los datos antes de enviarlo, se pierde.</p>
+<h3>Un cliente nuevo no está donde lo visito</h3>
+<p>Los clientes nuevos llegan al final de la ruta. Toca <b>Organizar ruta</b>, muévelo a su lugar y guarda.</p>
+<h3>Me dice "Demasiados intentos fallidos"</h3>
+<p>Escribiste mal la contraseña 5 veces. Espera 15 minutos o pide al administrador una contraseña nueva.</p>
+<h3>El cliente pagó por Nequi</h3>
+<p>Registra el pago normalmente y elige el método <b>Nequi</b>. Ese dinero no lo entregas en efectivo.</p>
+<h3>El cliente quiere pagar todo lo que debe</h3>
+<p>En la ventana de pago toca <span class="boton claro">Saldo total</span> y registra el pago. El crédito queda pagado.</p>
+<h3>Mi efectivo en mano sale negativo</h3>
+<p>Tus gastos fueron mayores a lo que cobraste: la empresa te debe esa diferencia.</p>
+<p class="version" style="margin-top:10mm">APEX · Sistema de control de cobros · Manual del cobrador · Versión 1.3<br>© APEX · Desarrollado por Ing. Antony Pérez</p>
+</main>
+<script src="manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>APEX · Manual del administrador</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+<main>
+<section class="portada">
+    <div class="contenido">
+        <div class="marca">A</div>
+        <div class="producto">APEX</div>
+        <h1>Manual del administrador</h1>
+        <div class="subtitulo">Guía completa para administrar el sistema de control de cobros: clientes, créditos, cobradores, caja, reportes y seguridad.</div>
+        <div class="publico">Dirigido a: dueño del negocio y administradores</div>
+    </div>
+    <div class="datos">
+        <div><strong>APEX · Sistema de control de cobros</strong>Versión 1.3 · <span data-fecha></span></div>
+        <div style="text-align:right"><strong>Desarrollado por</strong>Ing. Antony Pérez</div>
+    </div>
+</section>
+
+<nav class="indice"><h2 data-sin-indice>Contenido</h2><div id="indice"></div></nav>
+
+<!-- ===================================================== -->
+<h1>Introducción</h1>
+<p class="lead">APEX es un sistema web para llevar el control de préstamos y cobros: registra a los clientes, los créditos que se les entregan, su plan de cuotas, cada pago recibido y el dinero que maneja cada cobrador.</p>
+
+<h2>¿Qué resuelve APEX?</h2>
+<div class="tarjetas">
+    <div class="tarjeta"><h4>Control de la cartera</h4><p>Sabe en todo momento cuánto dinero hay en la calle, cuánto está vencido y qué cobrador lo maneja.</p></div>
+    <div class="tarjeta"><h4>Control del cobrador</h4><p>Cuántos clientes tiene cada uno, cuánto recaudó, cuánto efectivo tiene en su poder y si entregó completa la plata.</p></div>
+    <div class="tarjeta"><h4>Orden en los cobros</h4><p>Plan de cuotas automático, ruta diaria, recibos, promesas de pago y control de mora.</p></div>
+    <div class="tarjeta"><h4>Información para decidir</h4><p>Calificación de cada cliente, rentabilidad mensual y reportes profesionales en Excel.</p></div>
+    <div class="tarjeta"><h4>Trabajo sin internet</h4><p>Las pantallas se pueden consultar sin señal y el cobrador sigue cobrando en la ruta: todo se envía solo al volver la conexión.</p></div>
+</div>
+
+<h2>Roles de usuario</h2>
+<p>El sistema tiene dos tipos de usuario. Cada persona debe tener su propio usuario: nunca compartas usuarios ni contraseñas.</p>
+<table class="tabla">
+    <thead><tr><th style="width:22%">Rol</th><th>Qué puede hacer</th></tr></thead>
+    <tbody>
+        <tr><td><b>Administrador</b></td><td>Todo el sistema: clientes, créditos, renovaciones, pagos y anulaciones, cobradores, cierres de caja, reportes, auditoría, respaldos, usuarios y configuración.</td></tr>
+        <tr><td><b>Cobrador</b></td><td>Solo su propia cartera: ve su ruta del día, sus clientes y créditos, registra pagos, gestiones de cobro y gastos de ruta, y registra clientes nuevos (quedan a su nombre). No crea créditos, no anula pagos, no ve reportes ni la información de otros cobradores.</td></tr>
+    </tbody>
+</table>
+<p>En el <a href="#cap17">capítulo 17</a> encontrarás la tabla completa de permisos por rol.</p>
+
+<h2>Requisitos para usar el sistema</h2>
+<ul>
+    <li>Un computador, tableta o celular con un navegador actualizado (Chrome, Edge, Firefox o Safari).</li>
+    <li>Conexión a la red donde está instalado el sistema (o a internet, si está publicado). Sin conexión se pueden consultar las pantallas ya abiertas y cobrar desde la ruta (<a href="#cap8">capítulo 8</a>).</li>
+    <li>La dirección del sistema, tu usuario y tu contraseña, entregados por el administrador.</li>
+</ul>
+
+<h2>Conceptos básicos</h2>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:24%"><b>Cliente</b></td><td>Persona a la que se le presta dinero. Se identifica por su cédula y siempre tiene un cobrador responsable.</td></tr>
+        <tr><td><b>Crédito</b></td><td>Préstamo entregado a un cliente, con un monto, un interés y un plan de cuotas. Tiene un código único (CR-00001).</td></tr>
+        <tr><td><b>Cuota</b></td><td>Cada uno de los pagos programados del crédito, con su fecha de vencimiento.</td></tr>
+        <tr><td><b>Pago</b></td><td>Dinero recibido del cliente. Genera un recibo con código único (RC-000001).</td></tr>
+        <tr><td><b>Cartera</b></td><td>Dinero pendiente por cobrar: la suma de los saldos de los créditos activos.</td></tr>
+        <tr><td><b>Mora</b></td><td>Cuotas que ya vencieron y no se han pagado.</td></tr>
+        <tr><td><b>Efectivo en mano</b></td><td>Dinero en efectivo que el cobrador recibió y aún no ha entregado en un cierre de caja.</td></tr>
+    </tbody>
+</table>
+
+<!-- ===================================================== -->
+<h1>Primeros pasos</h1>
+
+<h2>Ingresar al sistema</h2>
+<ol class="pasos">
+    <li>Abre el navegador y escribe la dirección del sistema (por ejemplo <code>http://localhost/ApexCobros</code> o la que te indiquen).</li>
+    <li>Escribe tu <b>usuario</b> (o tu correo) y tu <b>contraseña</b>. Puedes tocar el ícono del ojo para ver lo que escribes.</li>
+    <li>Presiona <span class="boton">Entrar →</span>.</li>
+</ol>
+<figure class="media"><img src="../img/login.png" alt="Pantalla de ingreso"><figcaption><b>Figura 2.1.</b> Pantalla de inicio de sesión.</figcaption></figure>
+<p>Si el usuario o la contraseña no son correctos aparece este aviso. Por seguridad el sistema no dice cuál de los dos está mal.</p>
+<figure class="pequena"><img src="../img/login_error.png" alt="Error de ingreso"><figcaption><b>Figura 2.2.</b> Aviso de datos incorrectos.</figcaption></figure>
+<div class="alerta"><b>Bloqueo por intentos fallidos.</b> Después de 5 intentos fallidos el ingreso se bloquea durante 15 minutos para ese usuario desde ese equipo. Esto protege contra personas que intentan adivinar contraseñas. Espera el tiempo indicado o pide al administrador que restablezca tu contraseña.</div>
+
+<h2>Cambio de contraseña obligatorio</h2>
+<p>La primera vez que ingresas, o cuando el administrador te asigna una contraseña nueva, el sistema te lleva a <span class="menu">Mi perfil</span> y no te deja usar ninguna otra pantalla hasta que crees una contraseña personal.</p>
+<figure><img src="../img/cambio_clave_obligatorio.png" alt="Cambio obligatorio"><figcaption><b>Figura 2.3.</b> Cambio de contraseña obligatorio en el primer ingreso.</figcaption></figure>
+<ol class="pasos">
+    <li>Escribe la contraseña actual (la que te entregaron).</li>
+    <li>Escribe la nueva contraseña. El medidor muestra en verde cada requisito que se cumple.</li>
+    <li>Repítela en <b>Confirmar nueva contraseña</b> y presiona <span class="boton">Actualizar contraseña</span>.</li>
+</ol>
+<figure class="media"><img src="../img/medidor_clave.png" alt="Medidor de fortaleza"><figcaption><b>Figura 2.4.</b> El medidor de fortaleza indica qué requisitos faltan.</figcaption></figure>
+<h3>Requisitos de una contraseña segura</h3>
+<ul>
+    <li>Mínimo <b>10 caracteres</b>.</li>
+    <li>Combinar <b>mayúsculas y minúsculas</b>, al menos un <b>número</b> y un <b>símbolo</b> (# $ % &amp; * ! ? . -).</li>
+    <li>No puede contener tu usuario, nombre, cédula o correo, ni palabras muy comunes (por ejemplo "password", "colombia", "123456").</li>
+    <li>No puede repetir el mismo carácter 4 veces seguidas, y debe ser diferente a la anterior.</li>
+</ul>
+<div class="consejo"><b>Cómo crear una buena contraseña:</b> une tres palabras que recuerdes con símbolos y números, por ejemplo <code>Mango.Rojo#Lunes27</code>. Es larga, fácil de recordar y difícil de adivinar.</div>
+
+<h2>La pantalla principal</h2>
+<figure><img src="../img/dashboard.png" alt="Pantalla principal"><figcaption><b>Figura 2.5.</b> Partes de la pantalla: menú lateral (izquierda), barra superior y área de trabajo.</figcaption></figure>
+<div class="dos-col">
+<div>
+<h3>Menú lateral</h3>
+<p>Agrupa los módulos en <b>Operación</b> (uso diario) y <b>Administración</b>. La opción en la que estás aparece resaltada. Abajo se muestra tu nombre, tu rol y el botón para cerrar sesión.</p>
+<p>En el celular el menú se oculta: tócalo con el botón <b>☰</b> de la esquina superior izquierda.</p>
+<p>La opción <span class="menu">Ayuda</span>, al final del menú, abre o descarga estos manuales en PDF. Cada usuario ve los que corresponden a su rol.</p>
+</div>
+<figure style="margin-top:0"><img src="../img/menu_lateral.png" alt="Menú lateral" style="max-height:95mm"><figcaption><b>Figura 2.6.</b> Menú del administrador.</figcaption></figure>
+</div>
+<h3>Barra superior</h3>
+<p>Muestra el nombre de la pantalla y la fecha de hoy, y dos accesos rápidos: <span class="boton claro">Cliente</span> para registrar un cliente y <span class="boton">Nuevo crédito</span>.</p>
+
+<h2>Notificaciones</h2>
+<p>Cada vez que realizas una acción, el sistema te confirma el resultado con una notificación en la esquina superior derecha (en el celular, abajo). Se cierran solas; si pasas el mouse por encima se detienen para que alcances a leerlas.</p>
+<figure class="media"><img src="../img/toast_bienvenida.png" alt="Notificación"><figcaption><b>Figura 2.7.</b> Notificación de operación exitosa.</figcaption></figure>
+<table class="tabla">
+    <thead><tr><th style="width:28%">Color</th><th>Significado</th></tr></thead>
+    <tbody>
+        <tr><td><span class="chip a">Verde · Operación exitosa</span></td><td>La acción se guardó correctamente.</td></tr>
+        <tr><td><span class="chip b" style="background:#e0f2fe;color:#075985">Azul · Información</span></td><td>Dato importante (por ejemplo, un sobrante en el cierre de caja).</td></tr>
+        <tr><td><span class="chip c">Naranja · Atención</span></td><td>No se realizó la acción por una regla del negocio, o hay algo que revisar.</td></tr>
+        <tr><td><span class="chip d">Rojo · No se pudo completar</span></td><td>Faltan datos o hay un error. Lee el mensaje: siempre explica qué corregir.</td></tr>
+    </tbody>
+</table>
+
+<h2>Confirmaciones</h2>
+<p>Las acciones delicadas (eliminar, anular) piden confirmación en una ventana que explica qué va a pasar. Algunas, como anular un pago, exigen escribir el motivo, que queda guardado en la auditoría.</p>
+<figure class="media"><img src="../img/confirmar_anulacion.png" alt="Confirmación"><figcaption><b>Figura 2.8.</b> Ventana de confirmación con motivo obligatorio.</figcaption></figure>
+
+<h2>Cerrar sesión</h2>
+<p>Usa el botón <b>⇥</b> junto a tu nombre, en la parte inferior del menú. Por seguridad la sesión también se cierra sola después de <b>30 minutos sin actividad</b> y, como máximo, a las 12 horas. Cierra siempre la sesión si usas un equipo compartido.</p>
+<p>Al cerrar sesión se borran del equipo las copias de pantallas guardadas para trabajar sin internet (tienen datos de clientes). Lo que el cobrador tenga <b>pendiente por enviar</b> no se borra. Cerrar sesión necesita internet: sin señal el botón avisa que no puede hacerlo.</p>
+
+<!-- ===================================================== -->
+<h1>Configuración inicial</h1>
+<p>Antes de empezar a operar, completa estos pasos una sola vez.</p>
+<ul class="checklist">
+    <li>Cambiar la contraseña inicial del administrador (el sistema lo exige).</li>
+    <li>Registrar los datos de la empresa en <span class="menu">Configuración</span>.</li>
+    <li>Revisar los valores por defecto de los créditos (interés, cuotas y frecuencia).</li>
+    <li>Crear un usuario para cada cobrador en <span class="menu">Usuarios</span>.</li>
+    <li>Registrar los clientes y asignarlos a sus cobradores.</li>
+    <li>Programar el respaldo diario (ver <a href="#cap15">Respaldo de datos</a>).</li>
+</ul>
+
+<h2>Datos de la empresa</h2>
+<p>Ingresa a <span class="menu">Configuración</span>. El nombre, NIT, teléfono y dirección aparecen en los recibos, el estado de cuenta, el paz y salvo y todos los reportes de Excel.</p>
+<figure><img src="../img/configuracion.png" alt="Configuración"><figcaption><b>Figura 3.1.</b> Datos de la empresa y valores por defecto de los créditos.</figcaption></figure>
+<table class="tabla">
+    <thead><tr><th style="width:30%">Campo</th><th>Uso</th></tr></thead>
+    <tbody>
+        <tr><td>Nombre comercial</td><td>Encabezado del menú, recibos, documentos y reportes.</td></tr>
+        <tr><td>NIT / documento</td><td>Recibos, estado de cuenta y paz y salvo.</td></tr>
+        <tr><td>Teléfono y dirección</td><td>Recibos y documentos.</td></tr>
+        <tr><td>Mensaje al pie del recibo</td><td>Texto final del recibo (por ejemplo "Gracias por su pago puntual").</td></tr>
+        <tr><td>Interés, N.º de cuotas y frecuencia</td><td>Valores que se proponen al crear un crédito. Se pueden cambiar en cada crédito.</td></tr>
+    </tbody>
+</table>
+
+<!-- ===================================================== -->
+<h1>Usuarios y cobradores</h1>
+<p>En <span class="menu">Usuarios</span> se administran las personas que acceden al sistema.</p>
+<figure><img src="../img/usuarios.png" alt="Usuarios"><figcaption><b>Figura 4.1.</b> Listado de usuarios con su rol, zona, número de clientes y último acceso.</figcaption></figure>
+
+<h2>Crear un cobrador</h2>
+<ol class="pasos">
+    <li>Entra a <span class="menu">Usuarios</span> y presiona <span class="boton claro">Nuevo</span> (o, desde <span class="menu">Cobradores y cartera</span>, <span class="boton">Nuevo cobrador</span>).</li>
+    <li>Selecciona el rol <b>Cobrador</b>.</li>
+    <li>Completa nombre, <b>cédula</b> y <b>teléfono</b> (obligatorios para cobradores), correo, zona o ruta y, si quieres, una <b>meta de recaudo diario</b>.</li>
+    <li>Define el <b>usuario</b> con el que ingresará (letras, números, punto o guion) y una contraseña temporal que cumpla la política.</li>
+    <li>Presiona <span class="boton">Guardar</span>. Entrega al cobrador su usuario y contraseña temporal: deberá cambiarla en su primer ingreso.</li>
+</ol>
+<figure><img src="../img/usuario_form.png" alt="Formulario de usuario"><figcaption><b>Figura 4.2.</b> Formulario de usuario con medidor de fortaleza de la contraseña.</figcaption></figure>
+<div class="nota"><b>Meta de recaudo diario:</b> se usa en el panel, en la ruta y en las tarjetas de cobradores para medir el avance del día. Si se deja vacía, la meta es lo que le vence ese día al cobrador.</div>
+
+<h2>Editar un usuario y restablecer su contraseña</h2>
+<p>Presiona el lápiz ✎ del usuario. Si escribes una contraseña nueva, el usuario deberá cambiarla en su siguiente ingreso y <b>todas sus sesiones abiertas se cierran de inmediato</b>. Lo mismo ocurre si cambias su rol o lo desactivas.</p>
+
+<h2>Desactivar o eliminar</h2>
+<ul>
+    <li><b>Desactivar</b> (botón ⏸): el usuario ya no puede ingresar y su sesión abierta se cierra al instante. Se conserva su historial. Es la opción recomendada cuando un cobrador se retira.</li>
+    <li><b>Eliminar</b> (botón 🗑): solo es posible si el usuario no tiene clientes asignados ni pagos registrados.</li>
+</ul>
+<div class="alerta"><b>Antes de desactivar a un cobrador</b>, traslada su cartera a otro (ver <a href="#cap11">Cobradores y cartera</a>) y cierra su caja para recibir el efectivo que tenga en su poder.</div>
+
+<!-- ===================================================== -->
+<h1>Clientes</h1>
+<figure><img src="../img/clientes.png" alt="Clientes"><figcaption><b>Figura 5.1.</b> Listado de clientes con calificación, contacto, cobrador, saldo y situación.</figcaption></figure>
+
+<h2>Buscar y filtrar</h2>
+<p>La barra de filtros permite buscar por cédula, nombre, teléfono o barrio y filtrar por cobrador (incluida la opción <b>Sin asignar</b>), situación (en mora, al día, sin crédito activo), calificación (A, B, C, D, N) y estado.</p>
+
+<h2>Registrar un cliente</h2>
+<ol class="pasos">
+    <li>Presiona <span class="boton claro">Cliente</span> en la barra superior o <span class="boton">Nuevo cliente</span> en el listado.</li>
+    <li>Completa los <b>datos personales</b>: cédula, nombres, apellidos y teléfono principal son obligatorios; el correo, el segundo teléfono, la fecha de nacimiento y la ocupación son opcionales.</li>
+    <li>Completa la <b>ubicación</b>: dirección (obligatoria), barrio, ciudad y los datos del negocio o trabajo.</li>
+    <li>Registra una <b>referencia personal</b> (nombre, teléfono y parentesco).</li>
+    <li>En <b>Asignación</b> elige el cobrador responsable y el estado.</li>
+    <li>Agrega observaciones útiles para el cobro (horario, puntos de referencia) y presiona <span class="boton">Registrar cliente</span>.</li>
+</ol>
+<figure><img src="../img/cliente_form.png" alt="Formulario de cliente" style="max-height:175mm"><figcaption><b>Figura 5.2.</b> Formulario de registro de cliente.</figcaption></figure>
+<div class="nota">No se pueden registrar dos clientes con la misma cédula. Los nombres se guardan automáticamente con mayúscula inicial.</div>
+
+<h2>Estados del cliente</h2>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:22%"><b>Activo</b></td><td>Cliente normal: se le pueden otorgar créditos.</td></tr>
+        <tr><td><b>Inactivo</b></td><td>Ya no trabaja con la empresa. No se le pueden crear créditos; se conserva su historial.</td></tr>
+        <tr><td><b>Bloqueado</b></td><td>No se le debe volver a prestar (por ejemplo, por incumplimiento). El sistema impide crearle créditos.</td></tr>
+    </tbody>
+</table>
+
+<h2>Ficha del cliente</h2>
+<p>Al abrir un cliente verás su resumen, su calificación de pago, datos de contacto, referencia, cobrador asignado con el historial de cambios y todos sus créditos con su avance.</p>
+<figure><img src="../img/cliente_ficha.png" alt="Ficha del cliente" style="max-height:185mm"><figcaption><b>Figura 5.3.</b> Ficha completa del cliente.</figcaption></figure>
+<p>Desde la ficha puedes <b>llamar</b>, escribir por <b>WhatsApp</b> (se abre el chat con un saludo), <b>editar</b>, crear un <b>nuevo crédito</b>, registrar un <b>pago</b> o <b>reasignar</b> el cobrador.</p>
+
+<h2>Calificación del cliente</h2>
+<p>El sistema califica automáticamente a cada cliente según la puntualidad de <b>todas</b> sus cuotas (las pagadas y las vencidas) y su mora actual. Una cuota cuenta como "a tiempo" si se pagó completa hasta un día después de su vencimiento.</p>
+<table class="tabla">
+    <thead><tr><th style="width:16%">Letra</th><th style="width:34%">Regla</th><th>Recomendación</th></tr></thead>
+    <tbody>
+        <tr><td><span class="chip a">A · Excelente</span></td><td>90 % o más a tiempo y sin mora actual mayor a 2 días</td><td>Apto para renovar o aumentar el monto.</td></tr>
+        <tr><td><span class="chip b">B · Bueno</span></td><td>75 % o más y mora actual de hasta 7 días</td><td>Apto para renovar.</td></tr>
+        <tr><td><span class="chip c">C · Regular</span></td><td>50 % o más y mora actual de hasta 30 días</td><td>Prestar con precaución y montos bajos.</td></tr>
+        <tr><td><span class="chip d">D · Riesgoso</span></td><td>El resto</td><td>No se recomienda prestar. El sistema muestra una alerta roja al crear o renovar.</td></tr>
+        <tr><td><span class="chip n">N · Sin historial</span></td><td>Menos de 3 cuotas evaluadas</td><td>Cliente nuevo: evaluar con la referencia y montos pequeños.</td></tr>
+    </tbody>
+</table>
+
+<h2>Asignar o reasignar clientes</h2>
+<p><b>Un cliente:</b> en su ficha, sección <b>Cobrador asignado</b>, elige el nuevo cobrador y presiona <span class="boton">Reasignar</span>.</p>
+<p><b>Varios a la vez:</b> en el listado marca las casillas de los clientes (o la casilla del encabezado para todos), elige el cobrador en la barra que aparece y presiona <span class="boton">Asignar</span>.</p>
+<figure><img src="../img/clientes_asignacion.png" alt="Asignación masiva"><figcaption><b>Figura 5.4.</b> Asignación masiva de clientes seleccionados.</figcaption></figure>
+<div class="nota">Cada cambio queda en el <b>historial de asignaciones</b> del cliente (quién, cuándo y por qué). El saldo del cliente pasa a la cartera del nuevo cobrador; los pagos ya recibidos siguen a nombre de quien los cobró.</div>
+
+<h2>Eliminar un cliente</h2>
+<p>Solo se puede eliminar un cliente que no tenga créditos registrados. Si ya tuvo créditos, cámbialo a estado <b>Inactivo</b>.</p>
+
+<!-- ===================================================== -->
+<h1>Créditos</h1>
+<figure><img src="../img/creditos.png" alt="Créditos"><figcaption><b>Figura 6.1.</b> Listado de créditos con su plan, avance, saldo y mora.</figcaption></figure>
+
+<h2>Crear un crédito</h2>
+<ol class="pasos">
+    <li>Presiona <span class="boton">Nuevo crédito</span> (o desde la ficha del cliente).</li>
+    <li>Busca y selecciona el <b>cliente</b>. Junto a cada nombre se muestra su calificación; si es D aparece una alerta. Los clientes bloqueados o sin cobrador no se pueden seleccionar.</li>
+    <li>Escribe el <b>monto a prestar</b> y revisa el <b>interés</b>, la <b>frecuencia</b> (diaria, semanal, quincenal o mensual) y el <b>número de cuotas</b>.</li>
+    <li>Indica la <b>fecha del préstamo</b> y la de la <b>primera cuota</b> (se propone automáticamente según la frecuencia).</li>
+    <li>Para créditos diarios, deja activo <b>No cobrar los domingos</b> si la ruta no trabaja ese día.</li>
+    <li>Revisa la <b>vista previa del plan</b> a la derecha y presiona <span class="boton">Crear crédito</span>.</li>
+</ol>
+<figure><img src="../img/credito_crear.png" alt="Nuevo crédito"><figcaption><b>Figura 6.2.</b> Creación de crédito con vista previa del plan de pagos y alerta de calificación.</figcaption></figure>
+
+<h2>Cómo se calcula el crédito</h2>
+<div class="formula">Total a pagar = Monto × (1 + Interés %)<small>Ejemplo: $ 500.000 al 20 % → $ 600.000. El interés es total para todo el plazo, no mensual.</small></div>
+<div class="formula">Valor de la cuota = Total ÷ N.º de cuotas, redondeado a la centena hacia arriba<small>La última cuota se ajusta para que la suma sea exacta. Ejemplo: $ 120.000 en 7 cuotas → 6 cuotas de $ 17.200 y una última de $ 16.800.</small></div>
+<ul>
+    <li><b>Diaria:</b> una cuota por día (saltando los domingos si así se indica).</li>
+    <li><b>Semanal / quincenal:</b> cada 7 o 15 días.</li>
+    <li><b>Mensual:</b> el mismo día de cada mes; si el mes no tiene ese día, se usa el último día del mes (31 de enero → 28/29 de febrero → 31 de marzo).</li>
+</ul>
+
+<h2>Detalle del crédito</h2>
+<figure><img src="../img/credito_ver.png" alt="Detalle del crédito"><figcaption><b>Figura 6.3.</b> Detalle del crédito: indicadores, plan de cuotas, datos, gestiones y pagos.</figcaption></figure>
+<p>El <b>plan de cuotas</b> muestra cada cuota con su vencimiento, lo abonado, lo pendiente y su estado:</p>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:22%"><span class="chip a">Pagada</span></td><td>Cubierta completamente (se muestra la fecha en que se completó).</td></tr>
+        <tr><td><span class="chip b" style="background:#e0f2fe;color:#075985">Parcial</span></td><td>Tiene un abono pero falta una parte.</td></tr>
+        <tr><td><span class="chip c">Pendiente</span></td><td>Aún no vence.</td></tr>
+        <tr><td><span class="chip d">Vencida</span></td><td>Su fecha ya pasó y no está pagada completa (marcada con una barra roja). La cuota del día se resalta en amarillo con la etiqueta <b>Hoy</b>.</td></tr>
+    </tbody>
+</table>
+
+<h2>Documentos del crédito</h2>
+<p>El botón <span class="boton claro">Documentos</span> ofrece:</p>
+<figure class="media"><img src="../img/menu_documentos.png" alt="Documentos"><figcaption><b>Figura 6.4.</b> Documentos disponibles.</figcaption></figure>
+<ul>
+    <li><b>Estado de cuenta (imprimir / PDF):</b> documento tamaño carta con los datos del cliente, las condiciones, el plan de cuotas y los pagos. Usa <span class="boton">Imprimir / Guardar PDF</span> y elige "Guardar como PDF" para enviarlo.</li>
+    <li><b>Estado de cuenta en Excel:</b> libro con el plan de cuotas (incluye los días de atraso de cada cuota) y los pagos.</li>
+    <li><b>Paz y salvo:</b> certificado que solo aparece cuando el crédito está totalmente pagado.</li>
+</ul>
+<div class="dos-col">
+<figure><img src="../img/estado_cuenta.png" alt="Estado de cuenta" style="max-height:120mm"><figcaption><b>Figura 6.5.</b> Estado de cuenta.</figcaption></figure>
+<figure><img src="../img/paz_y_salvo.png" alt="Paz y salvo" style="max-height:120mm"><figcaption><b>Figura 6.6.</b> Certificado de paz y salvo.</figcaption></figure>
+</div>
+
+<h2>Renovar un crédito</h2>
+<p>La renovación (refinanciación) se usa cuando un cliente que todavía debe pide un préstamo nuevo. El saldo pendiente se descuenta del nuevo monto y al cliente se le entrega solo la diferencia.</p>
+<ol class="pasos">
+    <li>Abre el crédito activo y presiona <span class="boton claro">Renovar</span>.</li>
+    <li>Escribe el nuevo monto y las condiciones. Debe ser <b>mayor</b> que el saldo pendiente.</li>
+    <li>Verifica el <b>efectivo a entregar</b> que calcula el sistema y presiona <span class="boton">Renovar crédito</span>.</li>
+</ol>
+<figure><img src="../img/renovar.png" alt="Renovar"><figcaption><b>Figura 6.7.</b> Renovación: $ 900.000 − saldo anterior $ 720.000 = $ 180.000 a entregar.</figcaption></figure>
+<p>El crédito anterior queda <b>pagado</b> con un movimiento de tipo <b>Renovación</b> (no es dinero recibido: no suma al recaudo ni a la caja) y ambos créditos quedan enlazados.</p>
+<figure><img src="../img/credito_renovado.png" alt="Crédito renovado"><figcaption><b>Figura 6.8.</b> Crédito nuevo con el detalle de la renovación.</figcaption></figure>
+<div class="alerta"><b>¿Te equivocaste en una renovación?</b> Anula el crédito <b>nuevo</b>: el anterior vuelve a quedar activo con su saldo exacto. El movimiento de renovación no se puede anular por separado.</div>
+
+<h2>Anular un crédito</h2>
+<p>Solo para créditos registrados por error. El crédito debe estar activo y <b>sin pagos vigentes</b> (anula primero los pagos si los hay). Se pide el motivo y el crédito queda en el historial como anulado; no se borra.</p>
+
+<!-- ===================================================== -->
+<h1>Pagos</h1>
+
+<h2>Registrar un pago</h2>
+<ol class="pasos">
+    <li>Desde el crédito, la ficha del cliente o la ruta presiona <span class="boton verde">Registrar pago</span>.</li>
+    <li>El valor sugerido es lo que el cliente debe a la fecha. Puedes cambiarlo o usar los botones rápidos ($ 10.000, $ 20.000, $ 50.000, saldo total).</li>
+    <li>Elige el <b>método</b>: efectivo, Nequi, Daviplata, transferencia u otro.</li>
+    <li>Como administrador puedes indicar la <b>fecha</b> (para registrar pagos de días anteriores) y <b>quién recibió</b> el dinero.</li>
+    <li>Presiona <span class="boton">Registrar pago</span>.</li>
+</ol>
+<figure class="media"><img src="../img/modal_pago.png" alt="Registrar pago"><figcaption><b>Figura 7.1.</b> Ventana para registrar un pago.</figcaption></figure>
+<div class="nota"><b>Cómo se aplica el pago:</b> se abona primero a las cuotas más antiguas. Se aceptan abonos de cualquier valor, pero nunca mayores al saldo. Cuando el saldo llega a cero, el crédito pasa a <b>Pagado</b>.</div>
+<div class="importante"><b>Valores no válidos:</b> el sistema rechaza valores negativos, con decimales o con letras. Escribe los pesos sin centavos, con o sin puntos de miles (25000 o 25.000).</div>
+
+<h2>Recibo de pago</h2>
+<p>Cada pago genera un recibo numerado. Desde el listado de pagos del crédito presiona 🖨 para verlo. Se puede <b>imprimir</b> en impresora de 80 mm o <b>enviar por WhatsApp</b> al cliente.</p>
+<figure class="pequena"><img src="../img/recibo.png" alt="Recibo"><figcaption><b>Figura 7.2.</b> Recibo de pago.</figcaption></figure>
+
+<h2>Anular un pago</h2>
+<p>Si un pago se registró por error (valor equivocado, duplicado), presiona ✕ junto al pago, escribe el motivo y confirma. El pago queda tachado como anulado y el saldo y las cuotas del crédito se recalculan automáticamente. Solo el administrador puede anular pagos.</p>
+
+<h2>Consultar pagos</h2>
+<p>En <span class="menu">Pagos</span> ves todos los pagos de un rango de fechas con el total recaudado, el número de pagos y el promedio. Filtra por cobrador, método, búsqueda libre o incluye los anulados.</p>
+<figure><img src="../img/pagos.png" alt="Pagos"><figcaption><b>Figura 7.3.</b> Consulta de pagos recibidos.</figcaption></figure>
+
+<!-- ===================================================== -->
+<h1>Ruta de cobro</h1>
+<p>La <span class="menu">Ruta de cobro</span> muestra, para la fecha elegida, los créditos que tienen cuotas por cobrar ese día o atrasadas. El cobrador la usa desde su celular; el administrador puede ver la de todos o la de un cobrador.</p>
+<figure><img src="../img/ruta_admin.png" alt="Ruta de cobro"><figcaption><b>Figura 8.1.</b> Ruta de cobro: indicadores del día, promesas y tarjetas de clientes.</figcaption></figure>
+<ul>
+    <li><b>Clientes a visitar</b> y cuántos ya pagaron.</li>
+    <li><b>Pendiente por cobrar</b>, incluido lo atrasado.</li>
+    <li><b>Cobrado hoy</b> en esa ruta y el <b>avance</b> frente a la meta diaria.</li>
+    <li>Cada tarjeta muestra la cuota, lo pendiente a la fecha, lo atrasado (borde rojo) y botones para llamar, WhatsApp, <b>Cobrar</b> o <b>No pagó</b>. Las tarjetas de quienes ya pagaron quedan en verde.</li>
+    <li>El número de cada tarjeta es la <b>posición del cliente en la ruta</b> de su cobrador.</li>
+    <li>El buscador filtra la ruta por nombre, barrio o dirección.</li>
+</ul>
+
+<h2>Orden de visita</h2>
+<p>Cada cobrador visita a sus clientes en el orden que él define, no por orden alfabético. El orden se guarda en el sistema y se conserva aunque cierre sesión, cambie de celular o pasen los días.</p>
+<figure><img src="../img/ruta_barra_orden.png" alt="Orden de visita"><figcaption><b>Figura 8.2.</b> Barra de orden de visita de la ruta.</figcaption></figure>
+<ol class="pasos">
+    <li>Elige un <b>cobrador</b> en el filtro y presiona <span class="boton">Ver</span>. Con "Todos los cobradores" no se puede organizar.</li>
+    <li>Presiona <span class="boton">Organizar ruta</span>. Arrastra cada tarjeta a su lugar (o usa las flechas ↑ ↓).</li>
+    <li>Presiona <span class="boton verde">Guardar orden</span>. Aparece un aviso verde cuando queda guardado.</li>
+</ol>
+<ul>
+    <li>Un <b>cliente nuevo</b>, o uno que se <b>traslada</b> a otro cobrador, entra al <b>final</b> de su ruta. Los demás no cambian de lugar.</li>
+    <li>El cambio de orden queda en la <b>auditoría</b> ("Orden de ruta actualizado").</li>
+</ul>
+
+<h2>Hoja de ruta (PDF)</h2>
+<p>El botón <span class="boton claro">Hoja de ruta (PDF)</span> abre un documento con todo lo que hay que recoger ese día, en el orden de visita: totales arriba, una fila por cliente con dirección, teléfono, cuota, atrasado y saldo, y espacio para anotar a mano lo recibido. Al final trae las promesas de pago del día. Presiona <span class="boton">Imprimir / Guardar PDF</span> para imprimirla o guardarla.</p>
+<div class="consejo">La hoja de ruta sirve de respaldo en papel si el celular se queda sin batería. Si un cobrador no tiene celular, imprímela cada mañana.</div>
+
+<h2>Trabajo sin internet</h2>
+<p>APEX sigue funcionando cuando se cae la señal. El <b>Manual del cobrador</b> (capítulo 8) explica el uso paso a paso; aquí está lo que el administrador debe saber.</p>
+<table class="tabla">
+    <thead><tr><th style="width:34%">Sin internet</th><th>Qué pasa</th></tr></thead>
+    <tbody>
+        <tr><td><b>Consultar</b> cualquier pantalla</td><td>Se muestra la última copia guardada en ese equipo, con una franja amarilla: "Sin conexión · copia guardada el …". Una pantalla nunca abierta con señal muestra la lista de las que sí están guardadas.</td></tr>
+        <tr><td><b>Cobrar, "No pagó" y ordenar</b> desde la Ruta de cobro</td><td>Se guarda en el celular y se envía solo, en el mismo orden, cuando vuelve la señal.</td></tr>
+        <tr><td>Todo lo demás (créditos, renovaciones, anulaciones, cierres de caja, clientes, usuarios, configuración, reportes en Excel, respaldo)</td><td>No se puede. Aparece el aviso "Esta acción necesita internet" y lo escrito en el formulario no se pierde.</td></tr>
+    </tbody>
+</table>
+<figure class="media"><img src="../img/movil_pendientes.png" alt="Pendiente por enviar"><figcaption><b>Figura 8.3.</b> Recuadro de la ruta con lo guardado en el celular, por enviar.</figcaption></figure>
+<h3>Cobros que llegan después</h3>
+<ul>
+    <li><b>Nunca se registran dos veces.</b> Cada cobro lleva un código único: si llega repetido por mala señal, se guarda una sola vez.</li>
+    <li><b>Conservan la hora real del cobro</b>, no la del envío. Excepciones: si ese día ya tiene <b>cierre de caja</b>, entra con la fecha del envío (para no descuadrar el cierre) y la nota dice cuándo se cobró; si pasaron <b>más de 7 días</b> o la hora del celular está mal, se usa la hora del servidor.</li>
+    <li>Llevan en la nota <b>"Registrado sin conexión"</b> y quedan en la auditoría.</li>
+    <li>Si el sistema rechaza uno (por ejemplo, el crédito ya fue anulado o el valor supera el saldo), queda <b>"por revisar"</b> en el celular del cobrador para reintentarlo o descartarlo.</li>
+</ul>
+<div class="importante"><b>Antes de cerrar la caja de un cobrador</b>, pídele que muestre la barra superior de la ruta: no debe decir "por enviar" ni "por revisar". Si tiene cobros guardados sin enviar, el efectivo que entrega no cuadrará con el sistema.</div>
+<div class="alerta"><b>Requisito:</b> el trabajo sin internet solo funciona si el sistema está publicado con <b>HTTPS</b> (ver Manual de instalación). Además, cada celular debe haber abierto la ruta con señal ese día para tener su copia.</div>
+
+<!-- ===================================================== -->
+<h1>Gestiones de cobro y promesas de pago</h1>
+<p>Cuando un cliente no paga, es importante dejar registrado por qué. Esto permite hacer seguimiento a la mora y medir el trabajo del cobrador.</p>
+<h2>Registrar una gestión</h2>
+<ol class="pasos">
+    <li>En la ruta presiona <span class="boton rojo">✕ No pagó</span>, o en el crédito <span class="boton claro">No pagó / gestión</span>.</li>
+    <li>Indica cómo se contactó: <b>visita</b>, <b>llamada</b> o <b>WhatsApp</b>.</li>
+    <li>Elige el resultado: promesa de pago, no estaba / cerrado, sin dinero hoy, se niega a pagar, dirección errada / se mudó u otro.</li>
+    <li>Si es una <b>promesa de pago</b>, indica la fecha (hasta 30 días) y el valor prometido.</li>
+    <li>Agrega una observación y presiona <span class="boton">Guardar gestión</span>.</li>
+</ol>
+<figure class="media"><img src="../img/modal_gestion.png" alt="Gestión de cobro"><figcaption><b>Figura 9.1.</b> Registro de una promesa de pago.</figcaption></figure>
+<h2>Estado de las promesas</h2>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:22%"><span class="chip b" style="background:#e0f2fe;color:#075985">Pendiente</span></td><td>La fecha prometida aún no ha pasado.</td></tr>
+        <tr><td><span class="chip a">Cumplida</span></td><td>El cliente pagó al menos el valor prometido entre el día de la gestión y la fecha prometida. Se marca sola al registrar el pago.</td></tr>
+        <tr><td><span class="chip d">Incumplida</span></td><td>Pasó la fecha sin que pagara lo prometido.</td></tr>
+    </tbody>
+</table>
+<p>Las promesas del día aparecen en el <b>panel</b> y en la <b>ruta</b>. El historial completo está en el detalle de cada crédito, y el porcentaje de cumplimiento por cobrador en <span class="menu">Reportes</span>.</p>
+
+<!-- ===================================================== -->
+<h1>Caja y cierres</h1>
+<p>El módulo <span class="menu">Caja</span> controla el efectivo: lo que cada cobrador recibe, lo que gasta en la ruta y lo que entrega al final del día.</p>
+<div class="formula">A entregar = Efectivo cobrado en el día − Gastos de ruta del día<small>Los pagos por Nequi, Daviplata o transferencia no se entregan en efectivo: llegan directo a la cuenta.</small></div>
+<div class="formula">Efectivo en mano = Todo el efectivo cobrado − Todos los gastos − Todo lo entregado en cierres<small>Si un día entregó de menos (faltante), esa diferencia sigue a su cargo hasta que la entregue.</small></div>
+<figure><img src="../img/caja_admin.png" alt="Caja"><figcaption><b>Figura 10.1.</b> Caja del día: efectivo, gastos y valor a entregar por cobrador.</figcaption></figure>
+
+<h2>Gastos de ruta</h2>
+<p>El cobrador registra sus gastos (transporte o gasolina, alimentación, papelería, recarga u otro) desde su celular. El administrador también puede registrarlos para cualquier cobrador y fecha en el formulario <b>Registrar gasto de ruta</b>, y anularlos si hay un error.</p>
+
+<h2>Cerrar la caja de un cobrador</h2>
+<ol class="pasos">
+    <li>Verifica que el cobrador no tenga cobros <b>por enviar</b> en su celular (ver <a href="#cap8">capítulo 8</a>). Si tiene, que se conecte y espere el aviso "Sincronizado".</li>
+    <li>Recibe el dinero del cobrador y cuéntalo.</li>
+    <li>En <span class="menu">Caja</span>, en la fila del cobrador, escribe en <b>Recibido</b> el valor que te entregó (se propone el valor esperado).</li>
+    <li>Mientras escribes, el sistema muestra si <b>cuadra exacto</b>, si hay <b>faltante</b> o <b>sobrante</b>.</li>
+    <li>Agrega una nota si hay diferencia y presiona <span class="boton">Cerrar</span>.</li>
+</ol>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:22%"><span class="chip a">Cuadrado</span></td><td>Entregó exactamente lo esperado.</td></tr>
+        <tr><td><span class="chip d">Faltante</span></td><td>Entregó menos. La diferencia queda a su cargo como efectivo en mano.</td></tr>
+        <tr><td><span class="chip b" style="background:#e0f2fe;color:#075985">Sobrante</span></td><td>Entregó más de lo esperado.</td></tr>
+        <tr><td><span class="chip n">Reembolso</span></td><td>Sus gastos superaron lo cobrado: la empresa le debe la diferencia. Se registra cerrando con valor 0.</td></tr>
+    </tbody>
+</table>
+<div class="alerta"><b>Cierre desactualizado:</b> si después del cierre se registran pagos o gastos de ese día, el sistema lo advierte en la fila del cobrador. Ciérralo nuevamente con el valor correcto.</div>
+<p>Debajo verás el historial de cierres de los últimos 7 días. El historial completo con faltantes y gastos está en el reporte <b>Caja y cierres</b>.</p>
+
+<!-- ===================================================== -->
+<h1>Cobradores y cartera</h1>
+<p>Este módulo responde a la pregunta clave del negocio: <b>¿cuántos clientes y cuánto dinero maneja cada cobrador?</b></p>
+<figure><img src="../img/cobradores.png" alt="Cobradores" style="max-height:165mm"><figcaption><b>Figura 11.1.</b> Tarjeta de cada cobrador con sus indicadores.</figcaption></figure>
+<table class="tabla">
+    <thead><tr><th style="width:28%">Indicador</th><th>Significado</th></tr></thead>
+    <tbody>
+        <tr><td>Cartera</td><td>Saldo pendiente de los créditos activos de los clientes que tiene asignados.</td></tr>
+        <tr><td>Clientes / créditos activos</td><td>Cantidad de clientes asignados y de créditos vigentes.</td></tr>
+        <tr><td>Capital</td><td>Suma de los montos prestados en los créditos activos.</td></tr>
+        <tr><td>Vencido / en mora</td><td>Valor de las cuotas vencidas sin pagar y cuántos créditos tienen mora.</td></tr>
+        <tr><td>Recaudo hoy / mes</td><td>Dinero recibido por ese cobrador (sin contar renovaciones).</td></tr>
+        <tr><td>Avance del día</td><td>Recaudo de hoy frente a su meta diaria.</td></tr>
+        <tr><td>Efectivo en mano</td><td>Efectivo cobrado que todavía no ha entregado en un cierre de caja.</td></tr>
+    </tbody>
+</table>
+<h2>Cartera de un cobrador</h2>
+<p>Al abrir una tarjeta se ve el detalle: indicadores, efectivo en mano, gráfica de recaudo de 14 días, créditos en mora y la lista de sus clientes con calificación, saldo y vencido. Desde aquí puedes ver su ruta, agregarle clientes, editarlo o exportar sus clientes a Excel.</p>
+<figure><img src="../img/cobrador_ver.png" alt="Cartera del cobrador" style="max-height:175mm"><figcaption><b>Figura 11.2.</b> Cartera detallada de un cobrador.</figcaption></figure>
+<h2>Trasladar la cartera completa</h2>
+<p>Útil para vacaciones, incapacidades o retiros. En la cartera del cobrador presiona <span class="boton claro">Trasladar cartera</span>, elige el cobrador que la recibe, escribe el motivo y confirma. Todos sus clientes pasan al nuevo cobrador y queda registrado en el historial de cada uno. Para mover solo algunos clientes usa la asignación masiva del listado de clientes.</p>
+
+<!-- ===================================================== -->
+<h1>Panel principal</h1>
+<p>Es la primera pantalla al ingresar. Resume el estado del negocio en tiempo real.</p>
+<figure><img src="../img/dashboard_completo.png" alt="Panel" style="max-height:190mm"><figcaption><b>Figura 12.1.</b> Panel principal completo.</figcaption></figure>
+<ul>
+    <li><b>Cartera por cobrar:</b> saldo de todos los créditos activos y el capital prestado.</li>
+    <li><b>Recaudo de hoy y del mes:</b> dinero recibido y lo que vence hoy.</li>
+    <li><b>Vencido (mora):</b> valor vencido, créditos en mora y porcentaje de la cartera.</li>
+    <li><b>Gráfica de recaudo</b> de los últimos 14 días.</li>
+    <li><b>Clientes:</b> total, activos, créditos nuevos del mes y alerta de clientes sin cobrador.</li>
+    <li><b>Efectivo en la calle</b> por cobrador y <b>promesas de pago</b> para hoy.</li>
+    <li><b>Cartera por cobrador</b> con el avance de su meta del día.</li>
+    <li><b>Créditos en mora</b> (los más antiguos primero) y <b>últimos pagos</b>.</li>
+</ul>
+
+<!-- ===================================================== -->
+<h1>Reportes</h1>
+<p>En <span class="menu">Reportes</span> eliges el periodo (desde, hasta) y, si quieres, un cobrador. La pantalla muestra la liquidación del recaudo, la rentabilidad mensual y el cumplimiento de promesas, y permite descargar 8 reportes en Excel.</p>
+<figure><img src="../img/reportes.png" alt="Reportes"><figcaption><b>Figura 13.1.</b> Reportes disponibles y filtros.</figcaption></figure>
+
+<h2>Reportes en Excel</h2>
+<table class="tabla">
+    <thead><tr><th style="width:26%">Reporte</th><th>Contenido</th></tr></thead>
+    <tbody>
+        <tr><td><b>Pagos recibidos</b></td><td>Cada pago del periodo: recibo, fecha, crédito, cliente, quién lo recibió, método y valor. Indicadores de total, efectivo y digital.</td></tr>
+        <tr><td><b>Cartera por cobrador</b></td><td>Clientes, créditos, capital, saldo, vencido, % de mora, efectivo en mano y recaudo de hoy y del mes por cobrador.</td></tr>
+        <tr><td><b>Créditos en mora</b></td><td>Ordenados por días de atraso, con rango (1–7, 8–30, 31–60, más de 60 días), calificación, última gestión y promesa.</td></tr>
+        <tr><td><b>Clientes</b></td><td>Directorio con contacto, cobrador, calificación, puntualidad, situación, saldo y vencido.</td></tr>
+        <tr><td><b>Caja y cierres</b></td><td>Dos hojas: cierres diarios (faltantes y sobrantes) y gastos de ruta.</td></tr>
+        <tr><td><b>Gestiones de cobro</b></td><td>Efectividad de promesas por cobrador y el detalle de cada gestión.</td></tr>
+        <tr><td><b>Rentabilidad</b></td><td>Por mes: capital colocado, efectivo entregado, recaudo, capital recuperado, interés ganado, gastos, utilidad y margen.</td></tr>
+        <tr><td><b>Informe gerencial completo</b></td><td>Todos los anteriores en un solo libro con 9 hojas.</td></tr>
+    </tbody>
+</table>
+<figure><img src="../img/excel_cartera_por_cobrador.png" alt="Reporte de cartera"><figcaption><b>Figura 13.2.</b> Reporte de cartera por cobrador abierto en Excel.</figcaption></figure>
+<figure><img src="../img/excel_mora.png" alt="Reporte de mora"><figcaption><b>Figura 13.3.</b> Reporte de mora con colores por rango de atraso y calificación.</figcaption></figure>
+<p>Todos los reportes traen el encabezado de la empresa, el periodo, quién lo generó, tarjetas de indicadores, totales con fórmulas (se recalculan al usar los filtros), filtros por columna, encabezado fijo y configuración de impresión horizontal.</p>
+
+<h2>Cómo leer la rentabilidad</h2>
+<figure><img src="../img/excel_rentabilidad.png" alt="Rentabilidad"><figcaption><b>Figura 13.4.</b> Reporte de rentabilidad mensual.</figcaption></figure>
+<ul>
+    <li><b>Capital colocado:</b> suma de los montos prestados en el mes. <b>Efectivo entregado</b> descuenta lo refinanciado en renovaciones.</li>
+    <li><b>Recaudo:</b> dinero recibido en el mes (sin renovaciones).</li>
+    <li><b>Interés ganado:</b> cada pago se divide en capital e interés en la misma proporción de su crédito. Ejemplo: en un crédito de $ 500.000 con total de $ 600.000, de cada $ 60.000 pagados $ 10.000 son interés.</li>
+    <li><b>Utilidad = interés ganado − gastos de ruta.</b> La ganancia se reconoce a medida que se cobra, no cuando se presta.</li>
+</ul>
+
+<!-- ===================================================== -->
+<h1>Auditoría</h1>
+<p>La <span class="menu">Auditoría</span> registra quién hizo qué, cuándo y desde qué dirección IP. No se puede modificar desde el sistema.</p>
+<figure><img src="../img/auditoria.png" alt="Auditoría"><figcaption><b>Figura 14.1.</b> Bitácora de auditoría con resumen de seguridad de las últimas 24 horas.</figcaption></figure>
+<p>Se registran, entre otros: ingresos y salidas, intentos fallidos y bloqueos, accesos denegados, cambios de contraseña, creación y edición de usuarios y clientes, asignaciones, créditos creados, renovados y anulados, pagos registrados y anulados, gestiones, cambios del orden de la ruta, cobros y gestiones que llegaron sin conexión (marcados "sin conexión"), gastos, cierres de caja, cambios de configuración, exportaciones y respaldos. Filtra por fechas, usuario, acción o texto.</p>
+<div class="consejo">Revisa la auditoría al menos una vez por semana, especialmente los <b>pagos anulados</b>, los <b>ingresos fallidos</b> y los <b>accesos denegados</b>.</div>
+
+<!-- ===================================================== -->
+<h1>Respaldo de datos</h1>
+<p>En <span class="menu">Respaldo</span> puedes descargar una copia completa de toda la información en un archivo <code>.sql</code>.</p>
+<figure><img src="../img/respaldo.png" alt="Respaldo"><figcaption><b>Figura 15.1.</b> Descarga de respaldo y contenido de la base de datos.</figcaption></figure>
+<ol class="pasos">
+    <li>Presiona <span class="boton">Descargar respaldo ahora</span>.</li>
+    <li>Guarda el archivo <b>fuera del computador</b> (memoria USB, Google Drive, correo).</li>
+    <li>Repite el proceso <b>todos los días</b>. El sistema también puede hacer respaldos automáticos diarios (ver el Manual de instalación).</li>
+</ol>
+<div class="importante"><b>El respaldo contiene datos personales y contraseñas cifradas.</b> Guárdalo en un lugar seguro y no lo compartas.</div>
+<p><b>Restaurar:</b> en phpMyAdmin selecciona la base <code>apex_cobros_db</code> → <b>Importar</b> → elige el archivo → <b>Continuar</b>. Esto reemplaza la información actual por la del respaldo; hazlo solo con apoyo técnico.</p>
+
+<!-- ===================================================== -->
+<h1>Mi perfil</h1>
+<p>En <span class="menu">Mi perfil</span> (tocando tu nombre en el menú) ves tus datos, tu último acceso y la fecha de tu último cambio de contraseña, y puedes cambiar tu contraseña. Al cambiarla se cierran tus demás sesiones abiertas en otros equipos.</p>
+<figure><img src="../img/perfil.png" alt="Mi perfil"><figcaption><b>Figura 16.1.</b> Mi perfil.</figcaption></figure>
+<h2>Ayuda y manuales</h2>
+<p>En <span class="menu">Ayuda</span> puedes abrir o descargar los manuales del sistema en PDF. El administrador ve los siete manuales; el cobrador ve su manual y la guía rápida.</p>
+<figure><img src="../img/ayuda.png" alt="Ayuda"><figcaption><b>Figura 16.2.</b> Centro de ayuda con los manuales.</figcaption></figure>
+
+<!-- ===================================================== -->
+<h1>Permisos por rol</h1>
+<table class="tabla">
+    <thead><tr><th>Función</th><th style="width:17%;text-align:center">Administrador</th><th style="width:17%;text-align:center">Cobrador</th></tr></thead>
+    <tbody>
+        <tr><td>Ver panel principal</td><td class="si" style="text-align:center">Sí (todo)</td><td class="si" style="text-align:center">Sí (lo suyo)</td></tr>
+        <tr><td>Ver ruta de cobro</td><td class="si" style="text-align:center">Todas</td><td class="si" style="text-align:center">La suya</td></tr>
+        <tr><td>Organizar el orden de la ruta</td><td class="si" style="text-align:center">De cualquier cobrador</td><td class="si" style="text-align:center">La suya</td></tr>
+        <tr><td>Hoja de ruta (PDF)</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">La suya</td></tr>
+        <tr><td>Ver y buscar clientes</td><td class="si" style="text-align:center">Todos</td><td class="si" style="text-align:center">Los suyos</td></tr>
+        <tr><td>Registrar clientes</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">Sí (quedan a su nombre)</td></tr>
+        <tr><td>Editar clientes</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">Los suyos (sin cambiar estado ni cobrador)</td></tr>
+        <tr><td>Asignar / trasladar clientes</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+        <tr><td>Eliminar clientes</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+        <tr><td>Crear, renovar y anular créditos</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+        <tr><td>Registrar pagos</td><td class="si" style="text-align:center">Sí (con fecha anterior)</td><td class="si" style="text-align:center">De sus clientes (fecha actual)</td></tr>
+        <tr><td>Anular pagos</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+        <tr><td>Registrar gestiones de cobro</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">De sus clientes</td></tr>
+        <tr><td>Registrar gastos de ruta</td><td class="si" style="text-align:center">De cualquier cobrador y fecha</td><td class="si" style="text-align:center">Los suyos, del día</td></tr>
+        <tr><td>Cerrar caja (recibir el efectivo)</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+        <tr><td>Estado de cuenta, Excel y paz y salvo</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">De sus clientes</td></tr>
+        <tr><td>Cobradores y cartera</td><td class="si" style="text-align:center">Todos</td><td class="si" style="text-align:center">Su cartera</td></tr>
+        <tr><td>Reportes y Excel</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+        <tr><td>Sin internet: consultar pantallas guardadas</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">Sí</td></tr>
+        <tr><td>Sin internet: cobrar, "No pagó" y ordenar en la ruta</td><td class="si" style="text-align:center">Sí</td><td class="si" style="text-align:center">Sí</td></tr>
+        <tr><td>Ayuda: manuales</td><td class="si" style="text-align:center">Los 7</td><td class="si" style="text-align:center">Cobrador y guía rápida</td></tr>
+        <tr><td>Usuarios, configuración, auditoría y respaldo</td><td class="si" style="text-align:center">Sí</td><td class="no" style="text-align:center">No</td></tr>
+    </tbody>
+</table>
+
+<!-- ===================================================== -->
+<h1>Preguntas frecuentes y solución de problemas</h1>
+<h3>Un cobrador olvidó su contraseña</h3>
+<p>En <span class="menu">Usuarios</span> edita al cobrador, escribe una contraseña temporal y guarda. Deberá cambiarla al ingresar.</p>
+<h3>Olvidé la contraseña del administrador</h3>
+<p>Si hay otro administrador, puede restablecerla. Si no, la persona de soporte técnico puede ejecutar en el servidor <code>php database\restablecer_clave.php admin</code> (ver Manual de instalación).</p>
+<h3>"Demasiados intentos fallidos"</h3>
+<p>Se escribió mal la contraseña 5 veces. Espera 15 minutos o restablece la contraseña del usuario.</p>
+<h3>"Tu sesión se cerró por inactividad"</h3>
+<p>Pasaron 30 minutos sin usar el sistema. Vuelve a ingresar; es una medida de seguridad.</p>
+<h3>No puedo crear un crédito a un cliente</h3>
+<p>Verifica que el cliente esté <b>activo</b> (no inactivo ni bloqueado) y que tenga un <b>cobrador asignado</b>.</p>
+<h3>Registré un pago con el valor equivocado</h3>
+<p>Anula el pago (✕ en el listado de pagos del crédito) indicando el motivo y regístralo de nuevo con el valor correcto.</p>
+<h3>El cobrador no ve a un cliente</h3>
+<p>El cliente está asignado a otro cobrador o a ninguno. Revisa la sección <b>Cobrador asignado</b> en la ficha del cliente.</p>
+<h3>No puedo eliminar un cliente o un usuario</h3>
+<p>Tiene historial (créditos, clientes o pagos). Cámbialo a <b>Inactivo</b> (cliente) o <b>desactívalo</b> (usuario).</p>
+<h3>El efectivo en mano de un cobrador es negativo</h3>
+<p>Sus gastos han superado lo cobrado y la empresa le debe esa diferencia (reembolso). Se compensa con lo que cobre después.</p>
+<h3>No puedo organizar la ruta</h3>
+<p>Elige un cobrador en el filtro de la ruta. Con "Todos los cobradores" el botón <b>Organizar ruta</b> no aparece.</p>
+<h3>Un cobro hecho sin internet no aparece en Pagos</h3>
+<p>Todavía está guardado en el celular del cobrador. Pídele que se conecte a internet y abra la Ruta de cobro; si su sesión venció, debe volver a ingresar con su mismo usuario. Si la barra dice "por revisar", el sistema lo rechazó: el motivo aparece en el recuadro de la ruta.</p>
+<h3>Sin internet, una pantalla dice "Sin conexión a internet"</h3>
+<p>Esa pantalla nunca se abrió con señal en ese equipo, así que no tiene copia. La página lista las pantallas que sí están guardadas.</p>
+<h3>El trabajo sin internet no funciona en los celulares</h3>
+<p>El sistema debe estar publicado con <b>HTTPS</b>. Con una dirección <code>http://</code> los navegadores no lo permiten (salvo en el mismo servidor, <code>localhost</code>).</p>
+<h3>El Excel muestra los números con comas en vez de puntos</h3>
+<p>Excel usa la configuración regional de tu computador. Los valores son correctos; solo cambia cómo se muestran los separadores.</p>
+
+<!-- ===================================================== -->
+<h1>Glosario</h1>
+<table class="tabla">
+    <tbody>
+        <tr><td style="width:26%"><b>Abono</b></td><td>Pago parcial de una cuota.</td></tr>
+        <tr><td><b>Anulación</b></td><td>Invalidar un pago o crédito registrado por error. No se borra: queda en el historial con su motivo.</td></tr>
+        <tr><td><b>Auditoría</b></td><td>Registro automático de todas las acciones realizadas en el sistema.</td></tr>
+        <tr><td><b>Calificación</b></td><td>Letra A, B, C, D o N que resume el comportamiento de pago del cliente.</td></tr>
+        <tr><td><b>Capital</b></td><td>Dinero prestado, sin intereses.</td></tr>
+        <tr><td><b>Cartera</b></td><td>Saldo total pendiente por cobrar.</td></tr>
+        <tr><td><b>Copia guardada</b></td><td>Última versión de una pantalla que el equipo guardó con señal; se muestra cuando no hay internet.</td></tr>
+        <tr><td><b>Cierre de caja</b></td><td>Registro de lo que un cobrador entrega en efectivo al final del día.</td></tr>
+        <tr><td><b>Efectivo en mano</b></td><td>Efectivo que un cobrador recibió y no ha entregado.</td></tr>
+        <tr><td><b>Hoja de ruta</b></td><td>Documento PDF o impreso con los clientes y valores a cobrar en el día, en orden de visita.</td></tr>
+        <tr><td><b>Gestión de cobro</b></td><td>Registro de una visita o llamada en la que el cliente no pagó.</td></tr>
+        <tr><td><b>Orden de visita</b></td><td>Posición de cada cliente en la ruta de su cobrador, definida por él mismo.</td></tr>
+        <tr><td><b>Mora</b></td><td>Retraso en el pago de cuotas vencidas.</td></tr>
+        <tr><td><b>Paz y salvo</b></td><td>Certificado que acredita que el crédito fue pagado en su totalidad.</td></tr>
+        <tr><td><b>Promesa de pago</b></td><td>Compromiso del cliente de pagar un valor en una fecha.</td></tr>
+        <tr><td><b>Recaudo</b></td><td>Dinero efectivamente recibido.</td></tr>
+        <tr><td><b>Renovación</b></td><td>Nuevo crédito que cancela el saldo del anterior; se entrega solo la diferencia.</td></tr>
+        <tr><td><b>Ruta</b></td><td>Lista de clientes que el cobrador debe visitar en el día.</td></tr>
+        <tr><td><b>Sincronizar</b></td><td>Enviar al sistema, al volver la señal, lo que se registró en el celular sin internet.</td></tr>
+    </tbody>
+</table>
+<p class="version" style="margin-top:10mm">APEX · Sistema de control de cobros · Manual del administrador · Versión 1.3<br>© APEX · Desarrollado por Ing. Antony Pérez</p>
+</main>
+<script src="manual.js"></script>
+</body>
+</html>
